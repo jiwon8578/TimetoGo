@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         if(nWeek==5){
             strweek="목요일";
             int num=0;
-            if(cal.get(Calendar.HOUR)==9){
+            if(cal.get(Calendar.HOUR)==10){
                 while(num<4){
                     NotificationSomethings();
                     num++;

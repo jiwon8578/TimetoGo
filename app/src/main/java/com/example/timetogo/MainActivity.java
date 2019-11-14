@@ -18,6 +18,11 @@ public class MainActivity extends AppCompatActivity {
 
         StrictMode.enableDefaults();
 
+        getBusAPI();
+        
+    }
+
+    public void getBusAPI() {
         TextView status1 = (TextView)findViewById(R.id.result); //파싱된 결과확인
 
         boolean in_rtNm = false, in_arrmsg1 = false, in_arrmsg2 = false;

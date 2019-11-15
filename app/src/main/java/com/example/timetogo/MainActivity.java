@@ -27,12 +27,13 @@ public class MainActivity extends AppCompatActivity {
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
     private int count = 0;
 
-
     public ArrayList<String> busRouteList = new ArrayList<String>(); //노선Id들의 리스트
     public ArrayList<String> stationList = new ArrayList<String>(); //정류소Id들의 리스트
     public ArrayList<String> stationNmList = new ArrayList<String>(); //정류소 이름들의 리스트
     public ArrayList<String> stationNoList = new ArrayList<String>(); //정류소 번호들의 리스트
     public ArrayList<String> seqList = new ArrayList<String>(); //정류소 순번들의 리스트
+
+    public String text = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +77,14 @@ public class MainActivity extends AppCompatActivity {
         }
         if(nWeek==6){
             strweek="금요일";
+            int num=0;
+            if(cal.get(Calendar.HOUR)==2){
+                while(num<4){
+                    NotificationSomethings();
+                    num++;
+                    SystemClock.sleep(10*1000);}
+
+            }
         }
         if(nWeek==7){
             strweek="토요일";
@@ -98,7 +107,8 @@ public class MainActivity extends AppCompatActivity {
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_foreground)) //BitMap 이미지 요구
                 .setContentTitle("Time to go!!!").setWhen(System.currentTimeMillis())
 
-                .setContentText("상태바 드래그시 보이는 서브타이틀").setVibrate(new long[]{40,300})
+                //.setContentText("상태바 드래그시 보이는 서브타이틀").setVibrate(new long[]{40,300})
+                .setContentText(text).setVibrate(new long[]{40,300})
 
                 //출처: https://androphil.tistory.com/368?category=423967 [소림사의 홍반장!]
                 // 더 많은 내용이라서 일부만 보여줘야 하는 경우 아래 주석을 제거하면 setContentText에 있는 문자열 대신 아래 문자열을 보여줌
@@ -182,7 +192,8 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case XmlPullParser.END_TAG:
                         if(parser.getName().equals("itemList")) {
-                            status1.setText(status1.getText() + "버스번호: " + rtNm + "첫번째 전: " + arrmsg1 + "두번째 전" + arrmsg2+"\n");
+                            //status1.setText(status1.getText() + "버스번호: " + rtNm + "첫번째 전: " + arrmsg1 + "두번째 전" + arrmsg2+"\n");
+                            text = "버스번호: " + rtNm + "첫번째 전: " + arrmsg1 + "두번째 전" + arrmsg2+"\n";
                         }
                         break;
                 }

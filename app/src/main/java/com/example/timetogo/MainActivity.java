@@ -27,11 +27,11 @@ public class MainActivity extends AppCompatActivity {
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
     private int count = 0;
 
-    public ArrayList<String> busRouteList = new ArrayList<String>(); //노선Id들의 리스트
-    public ArrayList<String> stationList = new ArrayList<String>(); //정류소Id들의 리스트
-    public ArrayList<String> stationNmList = new ArrayList<String>(); //정류소 이름들의 리스트
-    public ArrayList<String> stationNoList = new ArrayList<String>(); //정류소 번호들의 리스트
-    public ArrayList<String> seqList = new ArrayList<String>(); //정류소 순번들의 리스트
+    public ArrayList<String> busRouteList; //노선Id들의 리스트
+    public ArrayList<String> stationList; //정류소Id들의 리스트
+    public ArrayList<String> stationNmList; //정류소 이름들의 리스트
+    public ArrayList<String> stationNoList; //정류소 번호들의 리스트
+    public ArrayList<String> seqList; //정류소 순번들의 리스트
 
     public String text = "";
 
@@ -39,9 +39,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         StrictMode.enableDefaults();
 
+        busRouteList = new ArrayList<String>();
+        stationList= new ArrayList<String>();
+        stationNmList = new ArrayList<String>();
+        stationNoList = new ArrayList<String>();
+        seqList = new ArrayList<String>();
+
+        //switch문 써서 함수를 다르게 호출
         getBusRouteList("152");
         getStationsByRouteList(busRouteList.get(0));
         for(int i = 0; i < stationNoList.size(); i++) {

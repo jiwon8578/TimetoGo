@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
     public ArrayList<String> stationNoList; //정류소 번호들의 리스트
     public ArrayList<String> seqList; //정류소 순번들의 리스트
-    TextView result=(TextView)findViewById(R.id.result);
+    TextView result;
     public String text = "";
 
     @Override
@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         stationNmList = new ArrayList<String>();
         stationNoList = new ArrayList<String>();
         seqList = new ArrayList<String>();
-
+        result = (TextView)findViewById(R.id.result);
 
         //switch문 써서 함수를 다르게 호출
         getBusRouteList("152");
@@ -129,11 +129,11 @@ public class MainActivity extends AppCompatActivity {
         Thread worker = new Thread() {
             public void run() {
                 try {
-                    socket = new Socket("52.78.56.123", 9999);
+                    socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
                     out = new PrintWriter(socket.getOutputStream(), true);
                     in = new BufferedReader(new InputStreamReader(
                             socket.getInputStream()));
-                    out.print("요일:"+nWeek+"시간:"+hour+"시"+"분:"+min+"분"+"\n");
+                    out.print(nWeek+","+hour+","+min+"\n");
                     out.flush();
                 } catch (IOException e) {
                     e.printStackTrace();

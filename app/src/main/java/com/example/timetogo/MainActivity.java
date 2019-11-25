@@ -16,6 +16,12 @@ import android.os.SystemClock;
 import android.widget.TextView;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -26,7 +32,15 @@ import java.util.Calendar;
 public class MainActivity extends AppCompatActivity {
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
     private int count = 0;
-
+    private Socket socket;
+    BufferedReader in;
+    PrintWriter out;
+    Calendar cal=Calendar.getInstance();
+    int hour=cal.get(Calendar.HOUR_OF_DAY);
+    int min=cal.get(Calendar.MINUTE);
+    String strweek=null;
+    int nWeek=cal.get(Calendar.DAY_OF_WEEK);
+    String data;
     public ArrayList<String> busRouteList; //노선Id들의 리스트
     public ArrayList<String> stationList; //정류소Id들의 리스트
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
@@ -47,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         stationNoList = new ArrayList<String>();
         seqList = new ArrayList<String>();
 
+
         //switch문 써서 함수를 다르게 호출
         getBusRouteList("152");
         getStationsByRouteList(busRouteList.get(0));
@@ -55,9 +70,7 @@ public class MainActivity extends AppCompatActivity {
                 getBusAPI(stationList.get(i), busRouteList.get(0), seqList.get(i));
             }
         }
-        Calendar cal=Calendar.getInstance();
-        String strweek=null;
-        int nWeek=cal.get(Calendar.DAY_OF_WEEK);
+
         if(nWeek==1){
             strweek="일요일";
         }
@@ -95,6 +108,43 @@ public class MainActivity extends AppCompatActivity {
         if(nWeek==7){
             strweek="토요일";
         }
+//현재시간 넘기기
+        Thread worker = new Thread() {
+            public void run() {
+                try {
+                    socket = new Socket("52.78.56.123", 9999);
+                    out = new PrintWriter(socket.getOutputStream(), true);
+                    in = new BufferedReader(new InputStreamReader(
+                            socket.getInputStream()));
+                    out.print("요일:"+nWeek+"시간:"+hour+"시"+"분:"+min+"분"+"\n");
+                    out.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+                while (true) {
+                    try {
+                        data = in.readLine();
+
+                        count++;
+
+                       // output.post(new Runnable() {
+                        //    @Override
+                       //     public void run() {
+                         //       output.append("\n" + data);
+
+                           // }
+                       // });
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+        worker.start();
 
 
 

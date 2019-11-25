@@ -35,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     private Socket socket;
     BufferedReader in;
     PrintWriter out;
+
+
     Calendar cal=Calendar.getInstance();
     int hour=cal.get(Calendar.HOUR_OF_DAY);
     int min=cal.get(Calendar.MINUTE);
@@ -46,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
     public ArrayList<String> stationNoList; //정류소 번호들의 리스트
     public ArrayList<String> seqList; //정류소 순번들의 리스트
-
+    TextView result=(TextView)findViewById(R.id.result);
     public String text = "";
 
     @Override
@@ -70,12 +72,21 @@ public class MainActivity extends AppCompatActivity {
                 getBusAPI(stationList.get(i), busRouteList.get(0), seqList.get(i));
             }
         }
-
+        int num=0;
         if(nWeek==1){
             strweek="일요일";
         }
+        socketdo();
         if(nWeek==2){
             strweek="월요일";
+            if((cal.get(Calendar.HOUR)==19)){
+                if(cal.get(Calendar.MINUTE)==30){
+                socketdo();
+                while(num<4){
+                    NotificationSomethings();
+                    num++;
+                    SystemClock.sleep(10*1000);}}
+            }
         }
         if(nWeek==3){
             strweek="화요일";
@@ -85,8 +96,9 @@ public class MainActivity extends AppCompatActivity {
         }
         if(nWeek==5){
             strweek="목요일";
-            int num=0;
+
             if(cal.get(Calendar.HOUR)==10){
+
                 while(num<4){
                     NotificationSomethings();
                     num++;
@@ -96,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if(nWeek==6){
             strweek="금요일";
-            int num=0;
+
             if(cal.get(Calendar.HOUR)==2){
                 while(num<4){
                     NotificationSomethings();
@@ -109,6 +121,11 @@ public class MainActivity extends AppCompatActivity {
             strweek="토요일";
         }
 //현재시간 넘기기
+
+
+
+    }
+    public void socketdo(){
         Thread worker = new Thread() {
             public void run() {
                 try {
@@ -129,13 +146,13 @@ public class MainActivity extends AppCompatActivity {
 
                         count++;
 
-                       // output.post(new Runnable() {
-                        //    @Override
-                       //     public void run() {
-                         //       output.append("\n" + data);
+                         result.post(new Runnable() {
+                            @Override
+                             public void run() {
+                              result.append("\n" + data);
 
-                           // }
-                       // });
+                         }
+                         });
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -145,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
         };
 
         worker.start();
-
 
 
     }

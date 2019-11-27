@@ -45,12 +45,10 @@ public class MainActivity extends AppCompatActivity {
     private Socket socket;
     BufferedReader in;
     PrintWriter out;
-
-    Calendar cal;
-    int hour;
-    int min;
-    String strweek = null;
-    int nWeek;
+    static int nWeek;
+    static int hour;
+    static int min;
+    static String strweek = null;
     String data;
     public ArrayList<String> busRouteList; //노선Id들의 리스트
     public ArrayList<String> stationList; //정류소Id들의 리스트
@@ -70,12 +68,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         StrictMode.enableDefaults();
         boolean initem = false, inAddr = false, inChargeTp = false, inCity = false;
-        TextView status1 = (TextView)findViewById(R.id.result); //파싱된 결과확인!
+        TextView status1 = (TextView) findViewById(R.id.result); //파싱된 결과확인!
 
 
         String lat = null, longi = null, statUpdateDatetime = null;
 
-        try{
+        try {
             URL url = new URL("https://www.weather.go.kr/weather/forecast/mid-term-rss3.jsp?stnId=108"
             ); //검색 URL부분
 
@@ -93,22 +91,21 @@ public class MainActivity extends AppCompatActivity {
             String strDate = fm.format(cal.getTime());
 
 
-
             int parserEvent = parser.getEventType();
             System.out.println("파싱시작합니다.");
 
-            while (parserEvent != XmlPullParser.END_DOCUMENT){
-                switch(parserEvent){
+            while (parserEvent != XmlPullParser.END_DOCUMENT) {
+                switch (parserEvent) {
                     case XmlPullParser.START_TAG://parser가 시작 태그를 만나면 실행
-                        if(parser.getName().equals("city")){ //title 만나면 내용을 받을수 있게 하자
+                        if (parser.getName().equals("city")) { //title 만나면 내용을 받을수 있게 하자
 
                             inCity = true;
                         }
-                        if(parser.getName().equals("tmEf")){ //title 만나면 내용을 받을수 있게 하자
+                        if (parser.getName().equals("tmEf")) { //title 만나면 내용을 받을수 있게 하자
                             inAddr = true;
                         }
 
-                        if(parser.getName().equals("wf")){ //address 만나면 내용을 받을수 있게 하자
+                        if (parser.getName().equals("wf")) { //address 만나면 내용을 받을수 있게 하자
                             inChargeTp = true;
                         }
 
@@ -116,16 +113,16 @@ public class MainActivity extends AppCompatActivity {
 
                     case XmlPullParser.TEXT://parser가 내용에 접근했을때
 
-                        if(inAddr){ //isTitle이 true일 때 태그의 내용을 저장.
+                        if (inAddr) { //isTitle이 true일 때 태그의 내용을 저장.
                             //if(parser.getText()==mFormat.format(mDate))
                             addr = parser.getText();
                             inAddr = false;
                         }
-                        if(inChargeTp){ //isAddress이 true일 때 태그의 내용을 저장.
+                        if (inChargeTp) { //isAddress이 true일 때 태그의 내용을 저장.
                             chargeTp = parser.getText();
                             inChargeTp = false;
                         }
-                        if(inCity){ //isAddress이 true일 때 태그의 내용을 저장.
+                        if (inCity) { //isAddress이 true일 때 태그의 내용을 저장.
 
                             city = parser.getText();
                             inCity = false;
@@ -135,9 +132,9 @@ public class MainActivity extends AppCompatActivity {
 
                         break;
                     case XmlPullParser.END_TAG:
-                        if(parser.getName().equals("data")){
-                            if(city.equals("서울")) {
-                                if(addr.equals(strDate)) {
+                        if (parser.getName().equals("data")) {
+                            if (city.equals("서울")) {
+                                if (addr.equals(strDate)) {
                                     status1.setText(status1.getText() + "도시:" + city + "\n 날짜 : " + addr + "\n 날씨: " + chargeTp + "\n");
                                     initem = false;
                                 }
@@ -148,76 +145,116 @@ public class MainActivity extends AppCompatActivity {
                 parserEvent = parser.next();
 
             }
-        } catch(Exception e){
+        } catch (Exception e) {
             status1.setText("에러가..났습니다...");
             e.printStackTrace();
         }
 
 
-
         busRouteList = new ArrayList<String>();
-        stationList= new ArrayList<String>();
+        stationList = new ArrayList<String>();
         stationNmList = new ArrayList<String>();
         stationNoList = new ArrayList<String>();
         seqList = new ArrayList<String>();
-        result = (TextView)findViewById(R.id.result);
+        result = (TextView) findViewById(R.id.result);
 
-        cal = Calendar.getInstance();
-        hour = cal.get(Calendar.HOUR_OF_DAY);
-        min = cal.get(Calendar.MINUTE);
-        nWeek = cal.get(Calendar.DAY_OF_WEEK);
+
 
         //switch문 써서 함수를 다르게 호출
         getBusRouteList("152");
         getStationsByRouteList(busRouteList.get(0));
-        for(int i = 0; i < stationNoList.size(); i++) {
-            if(stationNoList.get(i).equals("02158")) {
+        for (int i = 0; i < stationNoList.size(); i++) {
+            if (stationNoList.get(i).equals("02158")) {
                 getBusAPI(stationList.get(i), busRouteList.get(0), seqList.get(i));
             }
         }
 
-        int num=0;
 
-        if(nWeek==1){
-            strweek="일요일";
-        }
-        if(nWeek==2){
-            strweek="월요일";
-        }
-        if(nWeek==3){
-            strweek="화요일";
-        }
-        if(nWeek==4){
-            strweek="수요일";
-            if((cal.get(Calendar.HOUR)==19)){
-                if(cal.get(Calendar.MINUTE)==30){
-                    socketdo();
-                    while(num<4){
-                        NotificationSomethings();
-                        num++;
-                        SystemClock.sleep(10*1000);
+        (new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                while (true)
+                {
+                    try {
+                        final Calendar cal;
+
+
+
+                        cal = Calendar.getInstance();
+                        hour = cal.get(Calendar.HOUR_OF_DAY);
+                        min = cal.get(Calendar.MINUTE);
+
+                        Thread.sleep(1000);
+                        runOnUiThread(new Runnable() // start actions in UI thread
+                        {
+
+
+                            int num = 0;
+                            @Override
+                            public void run() {
+
+                                long time = System.currentTimeMillis();
+                                nWeek = cal.get(Calendar.DAY_OF_WEEK);
+                                if(nWeek==1){
+                                    strweek="일요일";
+                                }
+                                if(nWeek==2){
+                                    strweek="월요일";
+                                }
+                                if(nWeek==3){
+                                    strweek="화요일";
+                                }
+                                if(nWeek==4){
+                                    strweek="수요일";
+                                   // NotificationSomethings();
+                                    // if((cal.get(Calendar.HOUR)==21)){
+                                    //   if(cal.get(Calendar.MINUTE)==33){
+                                    String time1=""+time/1000*60*60;
+                                    String time2=""+time/1000*60;
+                                    Log.d("timeH",time1);
+                                    Log.d("timeM",time2);
+                                    if((cal.get(Calendar.HOUR)==10)){
+                                           if(cal.get(Calendar.MINUTE)==12){
+                                            socketdo();
+                                            //NotificationSomethings();
+                                            while(num<4){
+                                                NotificationSomethings();
+                                                num++;
+                                                SystemClock.sleep(10*1000);
+                                            }
+                                        }
+                                    }
+                                }
+                                if(nWeek==5){
+                                    strweek="목요일";
+                                }
+                                if(nWeek==6){
+                                    strweek="금요일";
+                                }
+                                if(nWeek==7){
+                                    strweek="토요일";
+                                }
+                            }
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
+
                 }
             }
-        }
-        if(nWeek==5){
-            strweek="목요일";
-        }
-        if(nWeek==6){
-            strweek="금요일";
-        }
-        if(nWeek==7){
-            strweek="토요일";
-        }
+        })).start();
+    }
+
 
         //socketdo();
-    }
+
 
     public void socketdo(){
         Thread worker = new Thread() {
             public void run() {
                 try {
-                    socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
+                    socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 9999);
                     out = new PrintWriter(socket.getOutputStream(), true);
                     in = new BufferedReader(new InputStreamReader(
                             socket.getInputStream()));

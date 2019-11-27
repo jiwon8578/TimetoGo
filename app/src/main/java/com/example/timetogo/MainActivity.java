@@ -13,7 +13,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
@@ -36,12 +39,11 @@ public class MainActivity extends AppCompatActivity {
     BufferedReader in;
     PrintWriter out;
 
-
-    Calendar cal=Calendar.getInstance();
-    int hour=cal.get(Calendar.HOUR_OF_DAY);
-    int min=cal.get(Calendar.MINUTE);
-    String strweek=null;
-    int nWeek=cal.get(Calendar.DAY_OF_WEEK);
+    Calendar cal;
+    int hour;
+    int min;
+    String strweek = null;
+    int nWeek;
     String data;
     public ArrayList<String> busRouteList; //노선Id들의 리스트
     public ArrayList<String> stationList; //정류소Id들의 리스트
@@ -50,6 +52,10 @@ public class MainActivity extends AppCompatActivity {
     public ArrayList<String> seqList; //정류소 순번들의 리스트
     TextView result;
     public String text = "";
+
+    String[] data_split;
+    String bus;
+    String station;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +70,11 @@ public class MainActivity extends AppCompatActivity {
         seqList = new ArrayList<String>();
         result = (TextView)findViewById(R.id.result);
 
+        cal = Calendar.getInstance();
+        hour = cal.get(Calendar.HOUR_OF_DAY);
+        min = cal.get(Calendar.MINUTE);
+        nWeek = cal.get(Calendar.DAY_OF_WEEK);
+
         //switch문 써서 함수를 다르게 호출
         getBusRouteList("152");
         getStationsByRouteList(busRouteList.get(0));
@@ -72,59 +83,44 @@ public class MainActivity extends AppCompatActivity {
                 getBusAPI(stationList.get(i), busRouteList.get(0), seqList.get(i));
             }
         }
+
         int num=0;
+
         if(nWeek==1){
             strweek="일요일";
         }
-        socketdo();
         if(nWeek==2){
             strweek="월요일";
-            if((cal.get(Calendar.HOUR)==19)){
-                if(cal.get(Calendar.MINUTE)==30){
-                socketdo();
-                while(num<4){
-                    NotificationSomethings();
-                    num++;
-                    SystemClock.sleep(10*1000);}}
-            }
         }
         if(nWeek==3){
             strweek="화요일";
         }
         if(nWeek==4){
             strweek="수요일";
+            if((cal.get(Calendar.HOUR)==19)){
+                if(cal.get(Calendar.MINUTE)==30){
+                    socketdo();
+                    while(num<4){
+                        NotificationSomethings();
+                        num++;
+                        SystemClock.sleep(10*1000);
+                    }
+                }
+            }
         }
         if(nWeek==5){
             strweek="목요일";
-
-            if(cal.get(Calendar.HOUR)==10){
-
-                while(num<4){
-                    NotificationSomethings();
-                    num++;
-                    SystemClock.sleep(10*1000);}
-
-            }
         }
         if(nWeek==6){
             strweek="금요일";
-
-            if(cal.get(Calendar.HOUR)==2){
-                while(num<4){
-                    NotificationSomethings();
-                    num++;
-                    SystemClock.sleep(10*1000);}
-
-            }
         }
         if(nWeek==7){
             strweek="토요일";
         }
-//현재시간 넘기기
 
-
-
+        //socketdo();
     }
+
     public void socketdo(){
         Thread worker = new Thread() {
             public void run() {
@@ -143,15 +139,17 @@ public class MainActivity extends AppCompatActivity {
                 while (true) {
                     try {
                         data = in.readLine();
-
                         count++;
-
                          result.post(new Runnable() {
                             @Override
                              public void run() {
-                              result.append("\n" + data);
-
-                         }
+                                result.append("\n" + data);
+                                data_split = data.split(",");
+                                bus = data_split[1];
+                                String[] temp = data_split[0].split("-");
+                                station = temp[0] + temp[1];
+                                //result.append("\n" + "bus: " + bus + "station: " + station);
+                            }
                          });
 
                     } catch (Exception e) {
@@ -160,10 +158,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-
         worker.start();
-
-
     }
     public void NotificationSomethings() {
 

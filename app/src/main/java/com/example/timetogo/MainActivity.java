@@ -38,6 +38,7 @@ import java.util.Locale;
 //busRouteNm이 버스 번호, busRouteId가 노선Id, station이 정류소Id
 
 public class MainActivity extends AppCompatActivity {
+    static int num = 0;
     static String addr = null, chargeTp = null, city = null;
     Button mRefreshBtn;
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
@@ -190,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
                         {
 
 
-                            int num = 0;
+
                             @Override
                             public void run() {
 
@@ -215,10 +216,10 @@ public class MainActivity extends AppCompatActivity {
                                     Log.d("timeH",time1);
                                     Log.d("timeM",time2);
                                     if((cal.get(Calendar.HOUR)==10)){
-                                           if(cal.get(Calendar.MINUTE)==12){
+                                           if(cal.get(Calendar.MINUTE)==24){
                                             socketdo();
-                                            //NotificationSomethings();
-                                            while(num<4){
+
+                                            while(num<2){
                                                 NotificationSomethings();
                                                 num++;
                                                 SystemClock.sleep(10*1000);

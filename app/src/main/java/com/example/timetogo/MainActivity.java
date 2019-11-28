@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     static int min;
     static String strweek = null;
     String data;
+    static public ArrayList<String> weatherList;
+   static public ArrayList<String> dayList;
     public ArrayList<String> busRouteList; //노선Id들의 리스트
     public ArrayList<String> stationList; //정류소Id들의 리스트
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
@@ -63,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     String[] data_split;
     String bus;
     String station;
+    static String bus1;
+    static String station1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
         result = (TextView) findViewById(R.id.result);
 
-      //  showBusList("152", "02158");
+      // showBusList("152", "02158");
        //showBusList("501", "03009");
 
         (new Thread(new Runnable() {
@@ -115,8 +119,8 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 if(nWeek==5){
                                     strweek="목요일";
-                                    alarmTime(16,59,1);
-                                    alarmTime(17,01,2);
+                                    alarmTime(17,28,1);
+                                   // alarmTime(17,05,2);
                                 }
                                 if(nWeek==6){
                                     strweek="금요일";
@@ -180,15 +184,16 @@ public class MainActivity extends AppCompatActivity {
 
                             @Override
                              public void run() {
-                                data = data.replace("[", " ");
-                                data = data.replace("'", " ");
-                                data = data.replace("]", " ");
+                                data = data.replace("[", "");
+                                data = data.replace("'", "");
+                                data = data.replace(" ", "");
+                                data = data.replace("]", "");
                                 //result.append("\n" + data);
                                 data_split = data.split(",");
-                                bus = data_split[1];
+                                bus1 = data_split[1];
                                 if(data_split[0].contains("-")) {
                                     String[] temp = data_split[0].split("-");
-                                    station = temp[0] + temp[1];
+                                    station1 = temp[0] + temp[1];
                                 } else {
                                     station = data_split[0];
                                 }
@@ -196,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 //result.append("\n" + "bus: " + bus + "station: " + station);
 
-                                showBusList(bus, station);
+                                showBusList(bus1, station1);
 
                             }
                          });
@@ -233,6 +238,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getWeatherAPI() {
+        weatherList=new ArrayList<String>();
+        dayList=new ArrayList<String>();
+
         boolean initem = false, inAddr = false, inChargeTp = false, inCity = false;
         TextView status1 = (TextView) findViewById(R.id.result); //파싱된 결과확인!
         String lat = null, longi = null, statUpdateDatetime = null;
@@ -277,13 +285,15 @@ public class MainActivity extends AppCompatActivity {
 
                     case XmlPullParser.TEXT://parser가 내용에 접근했을때
 
-                        if (inAddr) { //isTitle이 true일 때 태그의 내용을 저장.
+                        if (inAddr) {
                             //if(parser.getText()==mFormat.format(mDate))
                             addr = parser.getText();
+                            dayList.add(addr);
                             inAddr = false;
                         }
-                        if (inChargeTp) { //isAddress이 true일 때 태그의 내용을 저장.
+                        if (inChargeTp) {
                             chargeTp = parser.getText();
+                            weatherList.add(chargeTp);
                             inChargeTp = false;
                         }
                         if (inCity) { //isAddress이 true일 때 태그의 내용을 저장.
@@ -453,6 +463,7 @@ public class MainActivity extends AppCompatActivity {
                     case XmlPullParser.TEXT:
                         if(in_busRouteId) {
                             busRouteId = parser.getText();
+
                             in_busRouteId = false;
                         }
                         break;

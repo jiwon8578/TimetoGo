@@ -78,9 +78,6 @@ public class MainActivity extends AppCompatActivity {
 
         result = (TextView) findViewById(R.id.result);
 
-      // showBusList("152", "02158");
-       //showBusList("501", "03009");
-
         (new Thread(new Runnable() {
 
             @Override
@@ -120,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
                                 if(nWeek==5){
                                     strweek="목요일";
                                     alarmTime(18,03,1);
-                                   // alarmTime(17,05,2);
                                 }
                                 if(nWeek==6){
                                     strweek="금요일";
@@ -138,23 +134,21 @@ public class MainActivity extends AppCompatActivity {
             }
         })).start();
 
+        //socketdo();
+
     }
     public void alarmTime(int hour1,int min1,int alarm){
 
         final Calendar cal;
-
         cal = Calendar.getInstance();
+
         if(hour==hour1){
             if(min==min1) {
-                while (num < alarm / alarm) {
+                while (num < alarm) {
                     socketdo();
-
-                         num++;
-                        // SystemClock.sleep(10*1000);
-
+                    num++;
                 }
             }
-
         }
 
     }
@@ -187,9 +181,8 @@ public class MainActivity extends AppCompatActivity {
                                 data = data.replace("'", "");
                                 data = data.replace(" ", "");
                                 data = data.replace("]", "");
-                               // data = data.replace(" ", "");
                                 Log.d(data,data);
-                                //result.append("\n" + data);
+
                                 data_split = data.split(",");
                                 bus1 = data_split[1];
                                 if(data_split[0].contains("-")) {
@@ -198,9 +191,6 @@ public class MainActivity extends AppCompatActivity {
                                 } else {
                                     station1 = data_split[0];
                                 }
-                                //showBusList(bus, station);
-
-                                //result.append("\n" + "bus: " + bus + "station: " + station);
 
                                 showBusList(bus1, station1);
                                 NotificationSomethings();
@@ -229,7 +219,6 @@ public class MainActivity extends AppCompatActivity {
         result.append("\nstation: " + station);
 
         getBusRouteList(bus);
-        //result.append("\nbusRoute: " + busRouteList.get(0));
         getStationsByRouteList(busRouteList.get(0));
         for (int i = 0; i < stationNoList.size(); i++) {
             if (stationNoList.get(i).equals(station)) {
@@ -548,6 +537,16 @@ public class MainActivity extends AppCompatActivity {
 
         } catch(Exception e) {
             //error
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        try {
+            socket.close();
+        } catch(IOException e) {
+            e.printStackTrace();
         }
     }
 }

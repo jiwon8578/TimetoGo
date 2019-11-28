@@ -68,10 +68,185 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         StrictMode.enableDefaults();
+
+        getWeatherAPI();
+
+        result = (TextView) findViewById(R.id.result);
+
+        showBusList("152", "02158");
+        showBusList("501", "03009");
+
+        (new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                while (true)
+                {
+                    try {
+                        final Calendar cal;
+
+                        cal = Calendar.getInstance();
+                        hour = cal.get(Calendar.HOUR_OF_DAY);
+                        min = cal.get(Calendar.MINUTE);
+                        nWeek = cal.get(Calendar.DAY_OF_WEEK);
+
+                        Thread.sleep(1000);
+                        runOnUiThread(new Runnable() // start actions in UI thread
+                        {
+
+                            @Override
+                            public void run() {
+
+                                long time = System.currentTimeMillis();
+
+                                if(nWeek==1){
+                                    strweek="일요일";
+                                }
+                                if(nWeek==2){
+                                    strweek="월요일";
+                                }
+                                if(nWeek==3){
+                                    strweek="화요일";
+                                }
+                                if(nWeek==4){
+                                    strweek="수요일";
+                                   // NotificationSomethings();
+                                    // if((cal.get(Calendar.HOUR)==21)){
+                                    //   if(cal.get(Calendar.MINUTE)==33){
+                                    String time1=""+time/1000*60*60;
+                                    String time2=""+time/1000*60;
+                                    Log.d("timeH",time1);
+                                    Log.d("timeM",time2);
+                                    if((cal.get(Calendar.HOUR)==10)){
+                                           if(cal.get(Calendar.MINUTE)==24){
+                                            socketdo();
+                                            showBusList(bus, station);
+
+                                            while(num<2){
+                                                NotificationSomethings();
+                                                num++;
+                                                SystemClock.sleep(10*1000);
+                                            }
+                                        }
+                                    }
+                                }
+                                if(nWeek==5){
+                                    strweek="목요일";
+                                    String time1=""+time/1000*60*60;
+                                    String time2=""+time/1000*60;
+                                    Log.d("timeH",time1);
+                                    Log.d("timeM",time2);
+                                    if((cal.get(Calendar.HOUR)==4)){
+                                        if(cal.get(Calendar.MINUTE)==4){
+                                            socketdo();
+
+                                            //while(num<2){
+                                                //showBusList(bus, station);
+                                                //showBusList("501", "03009");
+                                                NotificationSomethings();
+                                                //num++;
+                                              //  SystemClock.sleep(10*1000);
+                                            //}
+                                        }
+                                    }
+                                }
+                                if(nWeek==6){
+                                    strweek="금요일";
+                                }
+                                if(nWeek==7){
+                                    strweek="토요일";
+                                }
+                            }
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        })).start();
+
+    }
+
+    public void socketdo(){
+        Thread worker = new Thread() {
+            public void run() {
+                try {
+                    socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
+                    out = new PrintWriter(socket.getOutputStream(), true);
+                    in = new BufferedReader(new InputStreamReader(
+                            socket.getInputStream()));
+                    out.print(nWeek+","+hour+","+min+"\n");
+                    out.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                while (true) {
+
+                    try {
+                        data = in.readLine();
+                        count++;
+
+                         result.post(new Runnable() {
+
+                            @Override
+                             public void run() {
+                                data = data.replace("[", "");
+                                data = data.replace("'", "");
+                                data = data.replace("]", "");
+                                //result.append("\n" + data);
+                                data_split = data.split(",");
+                                bus = data_split[1];
+                                if(data_split[0].contains("-")) {
+                                    String[] temp = data_split[0].split("-");
+                                    station = temp[0] + temp[1];
+                                } else {
+                                    station = data_split[0];
+                                }
+                                //showBusList(bus, station);
+
+                                //result.append("\n" + "bus: " + bus + "station: " + station);
+
+                                //showBusList(bus, station);
+
+                            }
+                         });
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        worker.start();
+    }
+
+    public void showBusList(String bus, String station) {
+        busRouteList = new ArrayList<String>();
+        stationList = new ArrayList<String>();
+        stationNmList = new ArrayList<String>();
+        stationNoList = new ArrayList<String>();
+        seqList = new ArrayList<String>();
+        text = "";
+
+        result.append("\nbus no: " + bus);
+        result.append("\nstation: " + station);
+
+        getBusRouteList(bus);
+        //result.append("\nbusRoute: " + busRouteList.get(0));
+        getStationsByRouteList(busRouteList.get(0));
+        for (int i = 0; i < stationNoList.size(); i++) {
+            if (stationNoList.get(i).equals(station)) {
+                getBusAPI(stationList.get(i), busRouteList.get(0), seqList.get(i));
+            }
+        }
+        result.append("\n"+text);
+    }
+
+    public void getWeatherAPI() {
         boolean initem = false, inAddr = false, inChargeTp = false, inCity = false;
         TextView status1 = (TextView) findViewById(R.id.result); //파싱된 결과확인!
-
-
         String lat = null, longi = null, statUpdateDatetime = null;
 
         try {
@@ -150,146 +325,8 @@ public class MainActivity extends AppCompatActivity {
             status1.setText("에러가..났습니다...");
             e.printStackTrace();
         }
-
-
-        busRouteList = new ArrayList<String>();
-        stationList = new ArrayList<String>();
-        stationNmList = new ArrayList<String>();
-        stationNoList = new ArrayList<String>();
-        seqList = new ArrayList<String>();
-        result = (TextView) findViewById(R.id.result);
-
-
-
-        //switch문 써서 함수를 다르게 호출
-        getBusRouteList("152");
-        getStationsByRouteList(busRouteList.get(0));
-        for (int i = 0; i < stationNoList.size(); i++) {
-            if (stationNoList.get(i).equals("02158")) {
-                getBusAPI(stationList.get(i), busRouteList.get(0), seqList.get(i));
-            }
-        }
-
-
-        (new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                while (true)
-                {
-                    try {
-                        final Calendar cal;
-
-
-
-                        cal = Calendar.getInstance();
-                        hour = cal.get(Calendar.HOUR_OF_DAY);
-                        min = cal.get(Calendar.MINUTE);
-
-                        Thread.sleep(1000);
-                        runOnUiThread(new Runnable() // start actions in UI thread
-                        {
-
-
-
-                            @Override
-                            public void run() {
-
-                                long time = System.currentTimeMillis();
-                                nWeek = cal.get(Calendar.DAY_OF_WEEK);
-                                if(nWeek==1){
-                                    strweek="일요일";
-                                }
-                                if(nWeek==2){
-                                    strweek="월요일";
-                                }
-                                if(nWeek==3){
-                                    strweek="화요일";
-                                }
-                                if(nWeek==4){
-                                    strweek="수요일";
-                                   // NotificationSomethings();
-                                    // if((cal.get(Calendar.HOUR)==21)){
-                                    //   if(cal.get(Calendar.MINUTE)==33){
-                                    String time1=""+time/1000*60*60;
-                                    String time2=""+time/1000*60;
-                                    Log.d("timeH",time1);
-                                    Log.d("timeM",time2);
-                                    if((cal.get(Calendar.HOUR)==10)){
-                                           if(cal.get(Calendar.MINUTE)==24){
-                                            socketdo();
-
-                                            while(num<2){
-                                                NotificationSomethings();
-                                                num++;
-                                                SystemClock.sleep(10*1000);
-                                            }
-                                        }
-                                    }
-                                }
-                                if(nWeek==5){
-                                    strweek="목요일";
-                                }
-                                if(nWeek==6){
-                                    strweek="금요일";
-                                }
-                                if(nWeek==7){
-                                    strweek="토요일";
-                                }
-                            }
-                        });
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        })).start();
     }
 
-
-        //socketdo();
-
-
-    public void socketdo(){
-        Thread worker = new Thread() {
-            public void run() {
-                try {
-                    socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 9999);
-                    out = new PrintWriter(socket.getOutputStream(), true);
-                    in = new BufferedReader(new InputStreamReader(
-                            socket.getInputStream()));
-                    out.print(nWeek+","+hour+","+min+"\n");
-                    out.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-
-                while (true) {
-                    try {
-                        data = in.readLine();
-                        count++;
-                         result.post(new Runnable() {
-                            @Override
-                             public void run() {
-                                result.append("\n" + data);
-                                data_split = data.split(",");
-                                bus = data_split[1];
-                                String[] temp = data_split[0].split("-");
-                                station = temp[0] + temp[1];
-                                //result.append("\n" + "bus: " + bus + "station: " + station);
-                            }
-                         });
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        worker.start();
-    }
     public void NotificationSomethings() {
 
 
@@ -434,6 +471,7 @@ public class MainActivity extends AppCompatActivity {
                     case XmlPullParser.END_TAG:
                         if(parser.getName().equals("itemList")) {
                             busRouteList.add(busRouteId);
+                            break;
                         }
                         break;
                 }

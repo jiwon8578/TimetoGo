@@ -14,7 +14,9 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.SystemClock;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,9 +46,9 @@ public class MainActivity extends AppCompatActivity {
     Button mRefreshBtn;
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
     private int count = 0;
-    private Socket socket;
-    BufferedReader in;
-    PrintWriter out;
+    public Socket socket;
+    public BufferedReader in;
+    public PrintWriter out;
     static int nWeek;
     static int hour;
     static int min;
@@ -68,11 +70,36 @@ public class MainActivity extends AppCompatActivity {
     static String bus1;
     static String station1;
 
+    ArrayList<String> items;
+    ArrayAdapter<String> adapter;
+    ListView listView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         StrictMode.enableDefaults();
+
+        items = new ArrayList<String>();
+        items.add("test");
+        adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, items);
+        listView = (ListView) findViewById(R.id.listView);
+        listView.setAdapter(adapter);
+
+        Thread worker = new Thread() {
+            public void run() {
+                try {
+                    socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
+                    out = new PrintWriter(socket.getOutputStream(), true);
+                    in = new BufferedReader(new InputStreamReader(
+                            socket.getInputStream()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        };
+        worker.start();
 
         getWeatherAPI();
 
@@ -92,41 +119,50 @@ public class MainActivity extends AppCompatActivity {
                         min = cal.get(Calendar.MINUTE);
                         nWeek = cal.get(Calendar.DAY_OF_WEEK);
 
+                        long time = System.currentTimeMillis();
+
+                        if(nWeek==1){
+                            strweek="일요일";
+                        }
+                        if(nWeek==2){
+                            strweek="월요일";
+                        }
+                        if(nWeek==3){
+                            strweek="화요일";
+                        }
+                        if(nWeek==4){
+                            strweek="수요일";
+
+                        }
+                        if(nWeek==5){
+                            strweek="목요일";
+                            alarmTime(22,28,1);
+                            alarmTime(22,29,2);
+                            alarmTime(22,30,3);
+                            alarmTime(22,31,4);
+                            alarmTime(22,32,5);
+                            alarmTime(22,33,6);
+                            alarmTime(22,34, 7);
+                        }
+                        if(nWeek==6){
+                            strweek="금요일";
+                        }
+                        if(nWeek==7){
+                            strweek="토요일";
+                        }
                         Thread.sleep(1000);
+
+                        /*Thread.sleep(1000);
                         runOnUiThread(new Runnable() // start actions in UI thread
                         {
 
                             @Override
                             public void run() {
 
-                                long time = System.currentTimeMillis();
 
-                                if(nWeek==1){
-                                    strweek="일요일";
-                                }
-                                if(nWeek==2){
-                                    strweek="월요일";
-                                }
-                                if(nWeek==3){
-                                    strweek="화요일";
-                                }
-                                if(nWeek==4){
-                                    strweek="수요일";
-
-                                }
-                                if(nWeek==5){
-                                    strweek="목요일";
-                                    alarmTime(18,03,1);
-                                }
-                                if(nWeek==6){
-                                    strweek="금요일";
-                                }
-                                if(nWeek==7){
-                                    strweek="토요일";
-                                }
                             }
-                        });
-                    } catch (InterruptedException e) {
+                        });*/
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
@@ -139,13 +175,21 @@ public class MainActivity extends AppCompatActivity {
     }
     public void alarmTime(int hour1,int min1,int alarm){
 
+        //final Calendar cal;
+        //cal = Calendar.getInstance();
+
         final Calendar cal;
+
         cal = Calendar.getInstance();
+        hour = cal.get(Calendar.HOUR_OF_DAY);
+        min = cal.get(Calendar.MINUTE);
+        nWeek = cal.get(Calendar.DAY_OF_WEEK);
 
         if(hour==hour1){
             if(min==min1) {
                 while (num < alarm) {
                     socketdo();
+                    NotificationSomethings();
                     num++;
                 }
             }
@@ -154,16 +198,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void socketdo(){
+
         Thread worker = new Thread() {
             public void run() {
                 try {
-                    socket = new Socket("ec2-52-78-56-123.ap-northeast-2.compute.amazonaws.com", 9999);
-                    out = new PrintWriter(socket.getOutputStream(), true);
-                    in = new BufferedReader(new InputStreamReader(
-                            socket.getInputStream()));
+                    final Calendar cal;
+
+                    cal = Calendar.getInstance();
+                    hour = cal.get(Calendar.HOUR_OF_DAY);
+                    min = cal.get(Calendar.MINUTE);
+                    nWeek = cal.get(Calendar.DAY_OF_WEEK);
+                    //socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
+                    //out = new PrintWriter(socket.getOutputStream(), true);
+                    //in = new BufferedReader(new InputStreamReader(
+                      //      socket.getInputStream()));
                     out.print(nWeek+","+hour+","+min+"\n");
                     out.flush();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -215,8 +266,8 @@ public class MainActivity extends AppCompatActivity {
         seqList = new ArrayList<String>();
         text = "";
 
-        result.append("\nbus no: " + bus);
-        result.append("\nstation: " + station);
+        //result.append("\nbus no: " + bus);
+        //result.append("\nstation: " + station);
 
         getBusRouteList(bus);
         getStationsByRouteList(busRouteList.get(0));
@@ -225,7 +276,10 @@ public class MainActivity extends AppCompatActivity {
                 getBusAPI(stationList.get(i), busRouteList.get(0), seqList.get(i));
             }
         }
-        result.append("\n"+text);
+       // result.append("\n"+text);
+
+        items.add(text);
+        adapter.notifyDataSetChanged();
     }
 
     public void getWeatherAPI() {

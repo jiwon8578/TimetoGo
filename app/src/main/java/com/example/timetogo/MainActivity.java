@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     public ArrayList<String> stationNoList; //정류소 번호들의 리스트
     public ArrayList<String> seqList; //정류소 순번들의 리스트
     TextView result;
-    public String text = "";
+    static public String text = "";
 
     String[] data_split;
     String bus;
@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 if(nWeek==5){
                                     strweek="목요일";
-                                    alarmTime(17,28,1);
+                                    alarmTime(18,03,1);
                                    // alarmTime(17,05,2);
                                 }
                                 if(nWeek==6){
@@ -145,14 +145,13 @@ public class MainActivity extends AppCompatActivity {
 
         cal = Calendar.getInstance();
         if(hour==hour1){
-            if(min==min1){
-                socketdo();
-                //showBusList(bus, station);
+            if(min==min1) {
+                while (num < alarm / alarm) {
+                    socketdo();
 
-                while(num<2*alarm){
-                    NotificationSomethings();
-                    num++;
-                    SystemClock.sleep(10*1000);
+                         num++;
+                        // SystemClock.sleep(10*1000);
+
                 }
             }
 
@@ -188,6 +187,8 @@ public class MainActivity extends AppCompatActivity {
                                 data = data.replace("'", "");
                                 data = data.replace(" ", "");
                                 data = data.replace("]", "");
+                               // data = data.replace(" ", "");
+                                Log.d(data,data);
                                 //result.append("\n" + data);
                                 data_split = data.split(",");
                                 bus1 = data_split[1];
@@ -195,13 +196,14 @@ public class MainActivity extends AppCompatActivity {
                                     String[] temp = data_split[0].split("-");
                                     station1 = temp[0] + temp[1];
                                 } else {
-                                    station = data_split[0];
+                                    station1 = data_split[0];
                                 }
                                 //showBusList(bus, station);
 
                                 //result.append("\n" + "bus: " + bus + "station: " + station);
 
                                 showBusList(bus1, station1);
+                                NotificationSomethings();
 
                             }
                          });

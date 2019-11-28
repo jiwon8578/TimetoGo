@@ -39,6 +39,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     static int num = 0;
+
     static String addr = null, chargeTp = null, city = null;
     Button mRefreshBtn;
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
@@ -73,8 +74,8 @@ public class MainActivity extends AppCompatActivity {
 
         result = (TextView) findViewById(R.id.result);
 
-        showBusList("152", "02158");
-        showBusList("501", "03009");
+      //  showBusList("152", "02158");
+       //showBusList("501", "03009");
 
         (new Thread(new Runnable() {
 
@@ -110,45 +111,12 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 if(nWeek==4){
                                     strweek="수요일";
-                                   // NotificationSomethings();
-                                    // if((cal.get(Calendar.HOUR)==21)){
-                                    //   if(cal.get(Calendar.MINUTE)==33){
-                                    String time1=""+time/1000*60*60;
-                                    String time2=""+time/1000*60;
-                                    Log.d("timeH",time1);
-                                    Log.d("timeM",time2);
-                                    if((cal.get(Calendar.HOUR)==10)){
-                                           if(cal.get(Calendar.MINUTE)==24){
-                                            socketdo();
-                                            showBusList(bus, station);
 
-                                            while(num<2){
-                                                NotificationSomethings();
-                                                num++;
-                                                SystemClock.sleep(10*1000);
-                                            }
-                                        }
-                                    }
                                 }
                                 if(nWeek==5){
                                     strweek="목요일";
-                                    String time1=""+time/1000*60*60;
-                                    String time2=""+time/1000*60;
-                                    Log.d("timeH",time1);
-                                    Log.d("timeM",time2);
-                                    if((cal.get(Calendar.HOUR)==4)){
-                                        if(cal.get(Calendar.MINUTE)==4){
-                                            socketdo();
-
-                                            //while(num<2){
-                                                //showBusList(bus, station);
-                                                //showBusList("501", "03009");
-                                                NotificationSomethings();
-                                                //num++;
-                                              //  SystemClock.sleep(10*1000);
-                                            //}
-                                        }
-                                    }
+                                    alarmTime(16,59,1);
+                                    alarmTime(17,01,2);
                                 }
                                 if(nWeek==6){
                                     strweek="금요일";
@@ -167,12 +135,32 @@ public class MainActivity extends AppCompatActivity {
         })).start();
 
     }
+    public void alarmTime(int hour1,int min1,int alarm){
+
+        final Calendar cal;
+
+        cal = Calendar.getInstance();
+        if(hour==hour1){
+            if(min==min1){
+                socketdo();
+                //showBusList(bus, station);
+
+                while(num<2*alarm){
+                    NotificationSomethings();
+                    num++;
+                    SystemClock.sleep(10*1000);
+                }
+            }
+
+        }
+
+    }
 
     public void socketdo(){
         Thread worker = new Thread() {
             public void run() {
                 try {
-                    socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
+                    socket = new Socket("ec2-52-78-56-123.ap-northeast-2.compute.amazonaws.com", 9999);
                     out = new PrintWriter(socket.getOutputStream(), true);
                     in = new BufferedReader(new InputStreamReader(
                             socket.getInputStream()));
@@ -192,9 +180,9 @@ public class MainActivity extends AppCompatActivity {
 
                             @Override
                              public void run() {
-                                data = data.replace("[", "");
-                                data = data.replace("'", "");
-                                data = data.replace("]", "");
+                                data = data.replace("[", " ");
+                                data = data.replace("'", " ");
+                                data = data.replace("]", " ");
                                 //result.append("\n" + data);
                                 data_split = data.split(",");
                                 bus = data_split[1];
@@ -208,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 //result.append("\n" + "bus: " + bus + "station: " + station);
 
-                                //showBusList(bus, station);
+                                showBusList(bus, station);
 
                             }
                          });

@@ -136,13 +136,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if(nWeek==5){
                             strweek="목요일";
-                            alarmTime(22,28,1);
-                            alarmTime(22,29,2);
-                            alarmTime(22,30,3);
-                            alarmTime(22,31,4);
-                            alarmTime(22,32,5);
-                            alarmTime(22,33,6);
-                            alarmTime(22,34, 7);
+                            alarmTime(23,2,1);
+                            alarmTime(23,3,2);
+                            alarmTime(23,4,3);
+                            alarmTime(23,5,4);
+                            alarmTime(23,6,5);
+                            alarmTime(23,7,6);
+                            alarmTime(23,8, 7);
                         }
                         if(nWeek==6){
                             strweek="금요일";
@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
             if(min==min1) {
                 while (num < alarm) {
                     socketdo();
-                    NotificationSomethings();
+                    //NotificationSomethings();
                     num++;
                 }
             }

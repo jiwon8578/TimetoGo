@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         worker.start();
 
         getWeatherAPI();
+        getTrafficAPI();
 
         result = (TextView) findViewById(R.id.result);
 
@@ -368,6 +369,52 @@ public class MainActivity extends AppCompatActivity {
             status1.setText("에러가..났습니다...");
             e.printStackTrace();
         }
+    }
+
+    public void getTrafficAPI() {
+
+        boolean in_prcs_spd = false;
+
+        String prcs_spd = null;
+
+        try {
+            URL url = new URL("http://openapi.seoul.go.kr:8088/737a6d6e6968796f34375474525268/xml/TrafficInfo/1/3/1220003800");
+            XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
+            XmlPullParser parser = parserCreator.newPullParser();
+
+            parser.setInput(url.openStream(), null);
+
+            int parserEvent = parser.getEventType();
+            System.out.println("파싱 시작합니다");
+
+            while(parserEvent != XmlPullParser.END_DOCUMENT) {
+                switch(parserEvent) {
+                    case XmlPullParser.START_TAG:
+                        if(parser.getName().equals("prcs_spd")) {
+                            in_prcs_spd = true;
+                        }
+                        break;
+                    case XmlPullParser.TEXT:
+                        if(in_prcs_spd) {
+                            prcs_spd = parser.getText();
+
+                            in_prcs_spd = false;
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if(parser.getName().equals("row")) {
+                            Toast.makeText(this, prcs_spd, Toast.LENGTH_LONG).show();
+                            break;
+                        }
+                        break;
+                }
+                parserEvent = parser.next();
+            }
+
+        } catch(Exception e) {
+            //error
+        }
+
     }
 
     public void NotificationSomethings() {

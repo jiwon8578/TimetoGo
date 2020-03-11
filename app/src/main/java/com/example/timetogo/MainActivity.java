@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     static int min;
     static String strweek = null;
     String data;
-    static String weatherValue = null;
+
     public ArrayList<String> busRouteList; //노선Id들의 리스트
     public ArrayList<String> stationList; //정류소Id들의 리스트
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
 
         Weather weather = new Weather();
         weather.getWeatherAPI(curLat, curLng);
-        Toast.makeText(getApplicationContext(), weatherValue, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), weather.weatherNumber, Toast.LENGTH_SHORT).show();
 
         getTrafficAPI();
 

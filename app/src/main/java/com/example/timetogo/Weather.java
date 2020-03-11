@@ -5,9 +5,12 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import java.net.URL;
 
-import static com.example.timetogo.MainActivity.weatherValue;
-
 public class Weather extends AppCompatActivity {
+
+    public String weatherNumber = null;
+    public int intNumber = 0;
+    public boolean rainSnow = false;
+    public boolean sunny = false;
 
     public void getWeatherAPI(double curLat, double curLng) {
         try {
@@ -19,13 +22,12 @@ public class Weather extends AppCompatActivity {
             parser.setInput(url.openStream(), null);
 
             int parserEvent = parser.getEventType();
-            System.out.println("파싱 시작합니다");
 
             while(parserEvent != XmlPullParser.END_DOCUMENT) {
                 switch(parserEvent) {
                     case XmlPullParser.START_TAG:
                         if(parser.getName().equals("weather")) {
-                            weatherValue = parser.getAttributeValue(null, "value");
+                            weatherNumber = parser.getAttributeValue(null, "number");
                         }
                         break;
                 }
@@ -33,6 +35,23 @@ public class Weather extends AppCompatActivity {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void categorize() {
+        intNumber = Integer.parseInt(weatherNumber);
+        if (intNumber < 300) { //thunderstorm
+            rainSnow = true;
+        } else if (intNumber < 500) { //drizzle
+            rainSnow = true;
+        } else if (intNumber < 600) { //rain
+            rainSnow = true;
+        } else if (intNumber < 700) { //snow
+            rainSnow = true;
+        } else if (intNumber < 800) { //atmosphere
+            sunny = true;
+        } else if (intNumber < 900) { //clear, clouds
+            sunny = true;
         }
     }
 }

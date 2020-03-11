@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
         Traffic traffic = new Traffic();
         traffic.getTrafficAPI();
-        Toast.makeText(getApplicationContext(),traffic.speed,Toast.LENGTH_SHORT).show();
+        traffic.categorize();
 
         result = (TextView) findViewById(R.id.result);
 

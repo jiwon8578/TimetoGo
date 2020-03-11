@@ -7,7 +7,11 @@ import java.net.URL;
 
 public class Traffic extends AppCompatActivity {
 
-    static String speed = null;
+    public String speed = null;
+    public int intSpeed = 0;
+    public boolean green = false;
+    public boolean yellow = false;
+    public boolean red = false;
 
     public void getTrafficAPI() {
         boolean in_prcs_spd = false;
@@ -46,6 +50,17 @@ public class Traffic extends AppCompatActivity {
             }
         } catch(Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void categorize() {
+        intSpeed = Integer.parseInt(speed);
+        if (intSpeed < 40) {
+            red = true;
+        } else if (intSpeed <= 80) {
+            yellow = true;
+        } else {
+            green = true;
         }
     }
 }

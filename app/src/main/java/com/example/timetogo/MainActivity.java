@@ -1,49 +1,45 @@
 package com.example.timetogo;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
-
+import androidx.core.content.ContextCompat;
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.os.SystemClock;
 import android.util.Log;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Locale;
 
 //흐름: 버스 번호를 입력 -> 해당 버스에 대한 노선 id가 나옴 -> 해당 노선에 대한 정류장들에 대한 정류장 정보가 나온다(정류장 id, 정류장 이름, 정류장 번호) -> 정류장 id, 노선 id, 순번을 입력하여 해당 정류장에 도착하는 특정 버스들에 대한 정보를 받아볼 수 있다.
 //busRouteNm이 버스 번호, busRouteId가 노선Id, station이 정류소Id
 
 public class MainActivity extends AppCompatActivity {
     static int num = 0;
-
-    static String addr = null, chargeTp = null, city = null;
-    Button mRefreshBtn;
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
     private int count = 0;
     public Socket socket;
@@ -54,8 +50,7 @@ public class MainActivity extends AppCompatActivity {
     static int min;
     static String strweek = null;
     String data;
-    static public ArrayList<String> weatherList;
-   static public ArrayList<String> dayList;
+
     public ArrayList<String> busRouteList; //노선Id들의 리스트
     public ArrayList<String> stationList; //정류소Id들의 리스트
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
@@ -65,8 +60,6 @@ public class MainActivity extends AppCompatActivity {
     static public String text = "";
 
     String[] data_split;
-    String bus;
-    String station;
     static String bus1;
     static String station1;
 
@@ -74,11 +67,32 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> adapter;
     ListView listView;
 
+    private static final int GPS_ENABLE_REQUEST_CODE = 2001;
+    private static final int PERMISSIONS_REQUEST_CODE = 100;
+    String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+
+    static double curLat;
+    static double curLng;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         StrictMode.enableDefaults();
+
+        //위치 퍼미션
+        if(!checkLocationServicesStatus()) {
+            showDialogForLocationServiceSetting();
+        } else {
+            checkRunTimePermission();
+        }
+
+        GpsTracker gpsTracker = new GpsTracker(MainActivity.this);
+        curLat = gpsTracker.getLatitude();
+        curLng = gpsTracker.getLongitude();
+
+        //Toast.makeText(getApplicationContext(),Double.toString(curLat),Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(),Double.toString(curLng),Toast.LENGTH_SHORT).show();
 
         items = new ArrayList<String>();
         items.add("test");
@@ -101,8 +115,9 @@ public class MainActivity extends AppCompatActivity {
         };
         worker.start();
 
-        getWeatherAPI();
-        getTrafficAPI();
+        Time time = new Time(curLat, curLng);
+        time.determineTime();
+        Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
 
         result = (TextView) findViewById(R.id.result);
 
@@ -281,140 +296,6 @@ public class MainActivity extends AppCompatActivity {
 
         items.add(text);
         adapter.notifyDataSetChanged();
-    }
-
-    public void getWeatherAPI() {
-        weatherList=new ArrayList<String>();
-        dayList=new ArrayList<String>();
-
-        boolean initem = false, inAddr = false, inChargeTp = false, inCity = false;
-        TextView status1 = (TextView) findViewById(R.id.result); //파싱된 결과확인!
-        String lat = null, longi = null, statUpdateDatetime = null;
-
-        try {
-            URL url = new URL("https://www.weather.go.kr/weather/forecast/mid-term-rss3.jsp?stnId=108"
-            ); //검색 URL부분
-
-            XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
-            XmlPullParser parser = parserCreator.newPullParser();
-
-            parser.setInput(url.openStream(), null);
-            // mNow = System.currentTimeMillis();
-            //mDate = new Date(mNow);
-            Calendar cal = new GregorianCalendar(Locale.KOREA);
-            cal.setTime(new Date());
-            cal.add(Calendar.DAY_OF_YEAR, 3); // 하루를 더한다.
-
-            SimpleDateFormat fm = new SimpleDateFormat("yyyy-MM-dd 00:00");
-            String strDate = fm.format(cal.getTime());
-
-
-            int parserEvent = parser.getEventType();
-            System.out.println("파싱시작합니다.");
-
-            while (parserEvent != XmlPullParser.END_DOCUMENT) {
-                switch (parserEvent) {
-                    case XmlPullParser.START_TAG://parser가 시작 태그를 만나면 실행
-                        if (parser.getName().equals("city")) { //title 만나면 내용을 받을수 있게 하자
-
-                            inCity = true;
-                        }
-                        if (parser.getName().equals("tmEf")) { //title 만나면 내용을 받을수 있게 하자
-                            inAddr = true;
-                        }
-
-                        if (parser.getName().equals("wf")) { //address 만나면 내용을 받을수 있게 하자
-                            inChargeTp = true;
-                        }
-
-                        break;
-
-                    case XmlPullParser.TEXT://parser가 내용에 접근했을때
-
-                        if (inAddr) {
-                            //if(parser.getText()==mFormat.format(mDate))
-                            addr = parser.getText();
-                            dayList.add(addr);
-                            inAddr = false;
-                        }
-                        if (inChargeTp) {
-                            chargeTp = parser.getText();
-                            weatherList.add(chargeTp);
-                            inChargeTp = false;
-                        }
-                        if (inCity) { //isAddress이 true일 때 태그의 내용을 저장.
-
-                            city = parser.getText();
-                            inCity = false;
-
-
-                        }
-
-                        break;
-                    case XmlPullParser.END_TAG:
-                        if (parser.getName().equals("data")) {
-                            if (city.equals("서울")) {
-                                if (addr.equals(strDate)) {
-                                    status1.setText(status1.getText() + "도시:" + city + "\n 날짜 : " + addr + "\n 날씨: " + chargeTp + "\n");
-                                    initem = false;
-                                }
-                            }
-                        }
-                        break;
-                }
-                parserEvent = parser.next();
-
-            }
-        } catch (Exception e) {
-            status1.setText("에러가..났습니다...");
-            e.printStackTrace();
-        }
-    }
-
-    public void getTrafficAPI() {
-
-        boolean in_prcs_spd = false;
-
-        String prcs_spd = null;
-
-        try {
-            URL url = new URL("http://openapi.seoul.go.kr:8088/737a6d6e6968796f34375474525268/xml/TrafficInfo/1/3/1220003800");
-            XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
-            XmlPullParser parser = parserCreator.newPullParser();
-
-            parser.setInput(url.openStream(), null);
-
-            int parserEvent = parser.getEventType();
-            System.out.println("파싱 시작합니다");
-
-            while(parserEvent != XmlPullParser.END_DOCUMENT) {
-                switch(parserEvent) {
-                    case XmlPullParser.START_TAG:
-                        if(parser.getName().equals("prcs_spd")) {
-                            in_prcs_spd = true;
-                        }
-                        break;
-                    case XmlPullParser.TEXT:
-                        if(in_prcs_spd) {
-                            prcs_spd = parser.getText();
-
-                            in_prcs_spd = false;
-                        }
-                        break;
-                    case XmlPullParser.END_TAG:
-                        if(parser.getName().equals("row")) {
-                            Toast.makeText(this, prcs_spd, Toast.LENGTH_LONG).show();
-                            break;
-                        }
-                        break;
-                }
-                parserEvent = parser.next();
-            }
-
-        } catch(Exception e) {
-            //error
-        }
-
     }
 
     public void NotificationSomethings() {
@@ -649,5 +530,97 @@ public class MainActivity extends AppCompatActivity {
         } catch(IOException e) {
             e.printStackTrace();
         }
+    }
+
+    //참고한 사이트: https://webnautes.tistory.com/1315
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if(requestCode == PERMISSIONS_REQUEST_CODE && grantResults.length == REQUIRED_PERMISSIONS.length) { //요청 코드가 PERMISSONS_REQUEST_CODE이고, 요청한 퍼시면 개수만큼 수신되었다면
+            boolean check_result = true;
+            for(int result : grantResults) {
+                if(result != PackageManager.PERMISSION_GRANTED) {
+                    check_result = false;
+                    break;
+                }
+            }
+
+            if(check_result) {
+            } else {
+                if(ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0]) || ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[1])) {
+                    Toast.makeText(MainActivity.this, "퍼미션이 거부되었습니다. 앱을 다시 실행하여 퍼미션을 허용해주세요", Toast.LENGTH_LONG).show();
+                    finish();
+                } else {
+                    Toast.makeText(MainActivity.this, "퍼미션이 거부되었습니다. 설정에서 퍼미션을 허용해야 합니다.", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    void checkRunTimePermission() {
+        int hasFineLocationPermission = ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION);
+        int hasCoarseLocationPermission = ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        if (hasFineLocationPermission == PackageManager.PERMISSION_GRANTED &&
+                hasCoarseLocationPermission == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, REQUIRED_PERMISSIONS[0])) {
+                Toast.makeText(MainActivity.this, "이 앱을 실행하려면 위치 접근 권한이 필요합니다.", Toast.LENGTH_LONG).show();
+                ActivityCompat.requestPermissions(MainActivity.this, REQUIRED_PERMISSIONS,
+                        PERMISSIONS_REQUEST_CODE);
+            } else {
+                ActivityCompat.requestPermissions(MainActivity.this, REQUIRED_PERMISSIONS,
+                        PERMISSIONS_REQUEST_CODE);
+            }
+        }
+    }
+
+    //여기부터는 GPS 활성화를 위한 메소드들
+    private void showDialogForLocationServiceSetting() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("위치 서비스 비활성화");
+        builder.setMessage("앱을 사용하기 위해서는 위치 서비스가 필요합니다.\n"
+                + "위치 설정을 수정하실래요?");
+        builder.setCancelable(true);
+        builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                Intent callGPSSettingIntent
+                        = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivityForResult(callGPSSettingIntent, GPS_ENABLE_REQUEST_CODE);
+            }
+        });
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.cancel();
+            }
+        });
+        builder.create().show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case GPS_ENABLE_REQUEST_CODE:
+                if (checkLocationServicesStatus()) {
+                    if (checkLocationServicesStatus()) {
+
+                        Log.d("@@@", "onActivityResult : GPS 활성화 되있음");
+                        checkRunTimePermission();
+                        return;
+                    }
+                }
+                break;
+        }
+    }
+
+    public boolean checkLocationServicesStatus() {
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
 }

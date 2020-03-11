@@ -115,13 +115,9 @@ public class MainActivity extends AppCompatActivity {
         };
         worker.start();
 
-        Weather weather = new Weather();
-        weather.getWeatherAPI(curLat, curLng);
-        weather.categorize();
-
-        Traffic traffic = new Traffic();
-        traffic.getTrafficAPI();
-        traffic.categorize();
+        Time time = new Time(curLat, curLng);
+        time.determineTime();
+        Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
 
         result = (TextView) findViewById(R.id.result);
 

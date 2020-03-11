@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -20,38 +19,27 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.os.SystemClock;
 import android.util.Log;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Locale;
 
 //흐름: 버스 번호를 입력 -> 해당 버스에 대한 노선 id가 나옴 -> 해당 노선에 대한 정류장들에 대한 정류장 정보가 나온다(정류장 id, 정류장 이름, 정류장 번호) -> 정류장 id, 노선 id, 순번을 입력하여 해당 정류장에 도착하는 특정 버스들에 대한 정보를 받아볼 수 있다.
 //busRouteNm이 버스 번호, busRouteId가 노선Id, station이 정류소Id
 
 public class MainActivity extends AppCompatActivity {
     static int num = 0;
-
-    static String addr = null, chargeTp = null, city = null;
-    Button mRefreshBtn;
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
     private int count = 0;
     public Socket socket;
@@ -62,8 +50,7 @@ public class MainActivity extends AppCompatActivity {
     static int min;
     static String strweek = null;
     String data;
-    static public ArrayList<String> weatherList;
-   static public ArrayList<String> dayList;
+    static String weather = null;
     public ArrayList<String> busRouteList; //노선Id들의 리스트
     public ArrayList<String> stationList; //정류소Id들의 리스트
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
@@ -73,8 +60,6 @@ public class MainActivity extends AppCompatActivity {
     static public String text = "";
 
     String[] data_split;
-    String bus;
-    String station;
     static String bus1;
     static String station1;
 
@@ -82,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> adapter;
     ListView listView;
 
-    static GpsTracker gpsTracker;
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
     private static final int PERMISSIONS_REQUEST_CODE = 100;
     String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
@@ -107,8 +91,8 @@ public class MainActivity extends AppCompatActivity {
         curLat = gpsTracker.getLatitude();
         curLng = gpsTracker.getLongitude();
 
-        Toast.makeText(getApplicationContext(),Double.toString(curLat),Toast.LENGTH_SHORT).show();
-        Toast.makeText(getApplicationContext(),Double.toString(curLng),Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(),Double.toString(curLat),Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(),Double.toString(curLng),Toast.LENGTH_SHORT).show();
 
         items = new ArrayList<String>();
         items.add("test");
@@ -131,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         };
         worker.start();
 
-        // getWeatherAPI();
+        getWeatherAPI();
         getTrafficAPI();
 
         result = (TextView) findViewById(R.id.result);
@@ -314,86 +298,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getWeatherAPI() {
-        weatherList=new ArrayList<String>();
-        dayList=new ArrayList<String>();
-
-        boolean initem = false, inAddr = false, inChargeTp = false, inCity = false;
         TextView status1 = (TextView) findViewById(R.id.result); //파싱된 결과확인!
-        String lat = null, longi = null, statUpdateDatetime = null;
 
         try {
-            URL url = new URL("https://www.weather.go.kr/weather/forecast/mid-term-rss3.jsp?stnId=108"
-            ); //검색 URL부분
+            URL url = new URL("http://api.openweathermap.org/data/2.5/weather?lat="+curLat+"&lon="+curLng+"&appid=214ca5ff55f7bc7e5e085dafb21c0789&mode=xml&lang=kr&units=metric");
 
             XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
             XmlPullParser parser = parserCreator.newPullParser();
 
             parser.setInput(url.openStream(), null);
-            // mNow = System.currentTimeMillis();
-            //mDate = new Date(mNow);
-            Calendar cal = new GregorianCalendar(Locale.KOREA);
-            cal.setTime(new Date());
-            cal.add(Calendar.DAY_OF_YEAR, 3); // 하루를 더한다.
-
-            SimpleDateFormat fm = new SimpleDateFormat("yyyy-MM-dd 00:00");
-            String strDate = fm.format(cal.getTime());
-
 
             int parserEvent = parser.getEventType();
-            System.out.println("파싱시작합니다.");
+            System.out.println("파싱 시작합니다");
 
-            while (parserEvent != XmlPullParser.END_DOCUMENT) {
-                switch (parserEvent) {
-                    case XmlPullParser.START_TAG://parser가 시작 태그를 만나면 실행
-                        if (parser.getName().equals("city")) { //title 만나면 내용을 받을수 있게 하자
-
-                            inCity = true;
-                        }
-                        if (parser.getName().equals("tmEf")) { //title 만나면 내용을 받을수 있게 하자
-                            inAddr = true;
-                        }
-
-                        if (parser.getName().equals("wf")) { //address 만나면 내용을 받을수 있게 하자
-                            inChargeTp = true;
-                        }
-
-                        break;
-
-                    case XmlPullParser.TEXT://parser가 내용에 접근했을때
-
-                        if (inAddr) {
-                            //if(parser.getText()==mFormat.format(mDate))
-                            addr = parser.getText();
-                            dayList.add(addr);
-                            inAddr = false;
-                        }
-                        if (inChargeTp) {
-                            chargeTp = parser.getText();
-                            weatherList.add(chargeTp);
-                            inChargeTp = false;
-                        }
-                        if (inCity) { //isAddress이 true일 때 태그의 내용을 저장.
-
-                            city = parser.getText();
-                            inCity = false;
-
-
-                        }
-
-                        break;
-                    case XmlPullParser.END_TAG:
-                        if (parser.getName().equals("data")) {
-                            if (city.equals("서울")) {
-                                if (addr.equals(strDate)) {
-                                    status1.setText(status1.getText() + "도시:" + city + "\n 날짜 : " + addr + "\n 날씨: " + chargeTp + "\n");
-                                    initem = false;
-                                }
-                            }
+            while(parserEvent != XmlPullParser.END_DOCUMENT) {
+                switch(parserEvent) {
+                    case XmlPullParser.START_TAG:
+                        if(parser.getName().equals("weather")) {
+                            weather = parser.getAttributeValue(null, "value");
+                            Toast.makeText(this, weather, Toast.LENGTH_SHORT).show();
                         }
                         break;
                 }
                 parserEvent = parser.next();
-
             }
         } catch (Exception e) {
             status1.setText("에러가..났습니다...");

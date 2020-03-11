@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     static int min;
     static String strweek = null;
     String data;
-    static String weather = null;
+    static String weatherValue = null;
     public ArrayList<String> busRouteList; //노선Id들의 리스트
     public ArrayList<String> stationList; //정류소Id들의 리스트
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
@@ -115,7 +115,10 @@ public class MainActivity extends AppCompatActivity {
         };
         worker.start();
 
-        getWeatherAPI();
+        Weather weather = new Weather();
+        weather.getWeatherAPI(curLat, curLng);
+        Toast.makeText(getApplicationContext(), weatherValue, Toast.LENGTH_SHORT).show();
+
         getTrafficAPI();
 
         result = (TextView) findViewById(R.id.result);
@@ -295,37 +298,6 @@ public class MainActivity extends AppCompatActivity {
 
         items.add(text);
         adapter.notifyDataSetChanged();
-    }
-
-    public void getWeatherAPI() {
-        TextView status1 = (TextView) findViewById(R.id.result); //파싱된 결과확인!
-
-        try {
-            URL url = new URL("http://api.openweathermap.org/data/2.5/weather?lat="+curLat+"&lon="+curLng+"&appid=214ca5ff55f7bc7e5e085dafb21c0789&mode=xml&lang=kr&units=metric");
-
-            XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
-            XmlPullParser parser = parserCreator.newPullParser();
-
-            parser.setInput(url.openStream(), null);
-
-            int parserEvent = parser.getEventType();
-            System.out.println("파싱 시작합니다");
-
-            while(parserEvent != XmlPullParser.END_DOCUMENT) {
-                switch(parserEvent) {
-                    case XmlPullParser.START_TAG:
-                        if(parser.getName().equals("weather")) {
-                            weather = parser.getAttributeValue(null, "value");
-                            Toast.makeText(this, weather, Toast.LENGTH_SHORT).show();
-                        }
-                        break;
-                }
-                parserEvent = parser.next();
-            }
-        } catch (Exception e) {
-            status1.setText("에러가..났습니다...");
-            e.printStackTrace();
-        }
     }
 
     public void getTrafficAPI() {

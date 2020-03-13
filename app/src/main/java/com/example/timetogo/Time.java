@@ -26,7 +26,6 @@ public class Time extends AppCompatActivity {
         weather.categorize();
 
         Traffic traffic = new Traffic();
-        traffic.getTrafficAPI();
         traffic.categorize();
 
         this.rainSnow = weather.rainSnow;

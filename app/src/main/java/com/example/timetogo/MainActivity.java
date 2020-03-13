@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     String[] data_split;
     static String bus1;
     static String station1;
+    static String destStn;
 
     static ArrayList<String> items;
     static ArrayAdapter<String> adapter;
@@ -111,9 +112,9 @@ public class MainActivity extends AppCompatActivity {
         };
         worker.start();
 
-        Time time = new Time(curLat, curLng);
-        time.determineTime();
-        Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
+        //Time time = new Time(curLat, curLng);
+        //time.determineTime();
+        //Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
 
         result = (TextView) findViewById(R.id.result);
 
@@ -158,12 +159,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if(nWeek==6){
                             strweek="금요일";
-                            alarmTime(18,25,1);
-                            alarmTime(18,26,2);
-                            alarmTime(18,27,3);
-                            alarmTime(18,28,4);
-                            alarmTime(18,29,5);
-                            alarmTime(18,30, 6);
+                            alarmTime(21,43,1);
+                            alarmTime(21,44,2);
+                            alarmTime(21,45,3);
+                            alarmTime(21,46,4);
+                            alarmTime(21,47,5);
+                            alarmTime(21,48, 6);
                         }
                         if(nWeek==7){
                             strweek="토요일";
@@ -260,9 +261,21 @@ public class MainActivity extends AppCompatActivity {
                                     station1 = data_split[0];
                                 }
 
-                                bus.showBusList(bus1, station1);
+                                if(data_split[2].contains("-")) {
+                                    String[] temp = data_split[2].split("-");
+                                    destStn = temp[0] + temp[1];
+                                } else {
+                                    destStn = data_split[2];
+                                }
+
+                                bus.showBusList(bus1, station1, destStn);
                                 //showBusList(bus1, station1);
                                 NotificationSomethings();
+
+                                Time time = new Time(curLat, curLng);
+                                time.determineTime();
+                                Toast.makeText(getApplicationContext(),Integer.toString(bus.averageSpd),Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
 
                             }
                          });

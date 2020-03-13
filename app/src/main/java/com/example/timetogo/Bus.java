@@ -1,5 +1,7 @@
 package com.example.timetogo;
 
+import android.util.Log;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import java.net.URL;
@@ -14,14 +16,23 @@ public class Bus {
     public ArrayList<String> seqList; //정류소 순번들의 리스트
     public String text = "";
 
-    public void showBusList(String bus, String station) {
+    public String destStn;
+    public ArrayList<String> travelTimeList; //시간
+
+    public int count = 0;
+    public int totalTime = 0;
+    static public int averageSpd = 0;
+
+    public void showBusList(String bus, String station, String destStn) {
         busRouteList = new ArrayList<String>();
         stationList = new ArrayList<String>();
         stationNmList = new ArrayList<String>();
         stationNoList = new ArrayList<String>();
         seqList = new ArrayList<String>();
         text = "";
+        travelTimeList = new ArrayList<String>();
 
+        this.destStn = destStn;
         getBusRouteList(bus);
         getStationsByRouteList(busRouteList.get(0));
         for (int i = 0; i < stationNoList.size(); i++) {
@@ -30,8 +41,40 @@ public class Bus {
             }
         }
 
+        getTravelTime(station,destStn);
+
         MainActivity.items.add(text);
         MainActivity.adapter.notifyDataSetChanged();
+    }
+
+    public void getTravelTime(String station, String destStn) {
+        boolean isStart = false;
+        String time = null;
+        int intTime = 0;
+
+        count = 0;
+        totalTime = 0;
+
+        for(int i = 0; i < travelTimeList.size(); i++) {
+            if(stationNoList.get(i).equals(station)) {
+                isStart = true;
+            }
+            if(isStart) {
+                time = travelTimeList.get(i);
+                intTime = Integer.parseInt(time);
+
+                totalTime += intTime;
+                count++;
+
+                Log.e("Time", time);
+                Log.e("Count", String.valueOf(count));
+                Log.e("Station", stationNmList.get(i));
+            }
+            if(stationNoList.get(i).equals(destStn)) {
+                isStart = false;
+            }
+        }
+        averageSpd = totalTime / count;
     }
 
     public void getBusAPI(String stId, String busRouteId, String ord) { //getLowArrInfoByStIdList
@@ -93,9 +136,9 @@ public class Bus {
 
     public void getStationsByRouteList(String busRouteId) { //busRouteId를 넣으면 stationId를 리턴한다.
 
-        boolean in_station = false, in_stationNm = false, in_stationNo = false, in_seq = false;
+        boolean in_station = false, in_stationNm = false, in_stationNo = false, in_seq = false, in_sectSpd = false;
 
-        String station = null, stationNm = null, stationNo = null, seq = null;
+        String station = null, stationNm = null, stationNo = null, seq = null, sectSpd = null;
 
         try {
             URL url = new URL("http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute?serviceKey=4Sc5MPbhBeWyQLVQ1JM9AqGWarV75Qk9hG%2FLuWVNl7%2B4hyHn8nP0mGrsxqDJHcgRdrSYT7sjblUpHpqjDcXdbw%3D%3D&busRouteId="+busRouteId);
@@ -122,6 +165,9 @@ public class Bus {
                         if(parser.getName().equals("seq")) {
                             in_seq = true;
                         }
+                        if(parser.getName().equals("sectSpd")) {
+                            in_sectSpd = true;
+                        }
                         break;
                     case XmlPullParser.TEXT:
                         if(in_station) {
@@ -140,6 +186,10 @@ public class Bus {
                             seq = parser.getText();
                             in_seq = false;
                         }
+                        if(in_sectSpd) {
+                            sectSpd = parser.getText();
+                            in_sectSpd = false;
+                        }
                         break;
                     case XmlPullParser.END_TAG:
                         if(parser.getName().equals("itemList")) {
@@ -147,6 +197,7 @@ public class Bus {
                             stationNmList.add(stationNm);
                             stationNoList.add(stationNo);
                             seqList.add(seq);
+                            travelTimeList.add(sectSpd);
                         }
                         break;
                 }

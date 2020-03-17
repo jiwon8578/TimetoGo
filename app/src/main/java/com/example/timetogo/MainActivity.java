@@ -142,10 +142,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if(nWeek==3){
                             strweek="화요일";
-                            alarmTime(22,2,1);
-                            alarmTime(22,3,2);
-                            alarmTime(22,4,3);
-                            alarmTime(22,5,4);
+                            alarmTime(22,11,1);
+                            alarmTime(22,12,2);
+                            alarmTime(22,13,3);
+                            alarmTime(22,14,4);
                             alarmTime(22,6,5);
                             alarmTime(22,7,6);
                         }

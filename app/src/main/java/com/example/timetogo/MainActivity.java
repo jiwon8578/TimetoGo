@@ -142,6 +142,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if(nWeek==3){
                             strweek="화요일";
+                            alarmTime(22,2,1);
+                            alarmTime(22,3,2);
+                            alarmTime(22,4,3);
+                            alarmTime(22,5,4);
+                            alarmTime(22,6,5);
+                            alarmTime(22,7,6);
                         }
                         if(nWeek==4){
                             strweek="수요일";
@@ -270,12 +276,14 @@ public class MainActivity extends AppCompatActivity {
 
                                 bus.showBusList(bus1, station1, destStn);
                                 //showBusList(bus1, station1);
-                                NotificationSomethings();
+                                NotificationSomethings(bus.text);
 
                                 Time time = new Time(curLat, curLng);
                                 time.determineTime();
-                                Toast.makeText(getApplicationContext(),Integer.toString(bus.averageSpd),Toast.LENGTH_SHORT).show();
-                                Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
+                                items.add(time.text);
+                                //NotificationSomethings(Integer.toString(time.early));
+                                // Toast.makeText(getApplicationContext(),Integer.toString(bus.averageSpd),Toast.LENGTH_SHORT).show();
+                                // Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
 
                             }
                          });
@@ -289,11 +297,8 @@ public class MainActivity extends AppCompatActivity {
         worker.start();
     }
 
-    public void NotificationSomethings() {
-
-
+    public void NotificationSomethings(String contentText) {
         NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-
         Intent notificationIntent = new Intent(this, ResultActivity.class);
         notificationIntent.putExtra("notificationId", count); //전달할 값
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK) ;
@@ -304,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
                 .setContentTitle("Time to go!!!").setWhen(System.currentTimeMillis())
 
                 //.setContentText("상태바 드래그시 보이는 서브타이틀").setVibrate(new long[]{40,300})
-                .setContentText(bus.text).setVibrate(new long[]{40,300})
+                .setContentText(contentText).setVibrate(new long[]{40,300})
 
                 //출처: https://androphil.tistory.com/368?category=423967 [소림사의 홍반장!]
                 // 더 많은 내용이라서 일부만 보여줘야 하는 경우 아래 주석을 제거하면 setContentText에 있는 문자열 대신 아래 문자열을 보여줌

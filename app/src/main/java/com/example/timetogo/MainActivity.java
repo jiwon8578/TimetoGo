@@ -7,6 +7,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
+import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -24,6 +25,20 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessOptions;
+import com.google.android.gms.fitness.data.DataSet;
+import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.request.DataReadRequest;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.BufferedReader;
@@ -34,6 +49,8 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 //흐름: 버스 번호를 입력 -> 해당 버스에 대한 노선 id가 나옴 -> 해당 노선에 대한 정류장들에 대한 정류장 정보가 나온다(정류장 id, 정류장 이름, 정류장 번호) -> 정류장 id, 노선 id, 순번을 입력하여 해당 정류장에 도착하는 특정 버스들에 대한 정보를 받아볼 수 있다.
 //busRouteNm이 버스 번호, busRouteId가 노선Id, station이 정류소Id
@@ -71,6 +88,10 @@ public class MainActivity extends AppCompatActivity {
 
     public Bus bus = new Bus();
 
+    int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
+
+    FitnessOptions fitnessOptions;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.enableDefaults();
 
         //위치 퍼미션
-        if(!checkLocationServicesStatus()) {
+        if (!checkLocationServicesStatus()) {
             showDialogForLocationServiceSetting();
         } else {
             checkRunTimePermission();
@@ -122,8 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                while (true)
-                {
+                while (true) {
                     try {
                         final Calendar cal;
 
@@ -134,46 +154,46 @@ public class MainActivity extends AppCompatActivity {
 
                         long time = System.currentTimeMillis();
 
-                        if(nWeek==1){
-                            strweek="일요일";
+                        if (nWeek == 1) {
+                            strweek = "일요일";
                         }
-                        if(nWeek==2){
-                            strweek="월요일";
+                        if (nWeek == 2) {
+                            strweek = "월요일";
                         }
-                        if(nWeek==3){
-                            strweek="화요일";
-                            alarmTime(22,11,1);
-                            alarmTime(22,12,2);
-                            alarmTime(22,13,3);
-                            alarmTime(22,14,4);
-                            alarmTime(22,6,5);
-                            alarmTime(22,7,6);
+                        if (nWeek == 3) {
+                            strweek = "화요일";
+                            alarmTime(22, 11, 1);
+                            alarmTime(22, 12, 2);
+                            alarmTime(22, 13, 3);
+                            alarmTime(22, 14, 4);
+                            alarmTime(22, 6, 5);
+                            alarmTime(22, 7, 6);
                         }
-                        if(nWeek==4){
-                            strweek="수요일";
+                        if (nWeek == 4) {
+                            strweek = "수요일";
 
                         }
-                        if(nWeek==5){
-                            strweek="목요일";
-                            alarmTime(21,41,1);
-                            alarmTime(21,42,2);
-                            alarmTime(21,43,3);
-                            alarmTime(21,44,4);
-                            alarmTime(21,45,5);
-                            alarmTime(21,7,6);
-                            alarmTime(21,8, 7);
+                        if (nWeek == 5) {
+                            strweek = "목요일";
+                            alarmTime(21, 41, 1);
+                            alarmTime(21, 42, 2);
+                            alarmTime(21, 43, 3);
+                            alarmTime(21, 44, 4);
+                            alarmTime(21, 45, 5);
+                            alarmTime(21, 7, 6);
+                            alarmTime(21, 8, 7);
                         }
-                        if(nWeek==6){
-                            strweek="금요일";
-                            alarmTime(21,43,1);
-                            alarmTime(21,44,2);
-                            alarmTime(21,45,3);
-                            alarmTime(21,46,4);
-                            alarmTime(21,47,5);
-                            alarmTime(21,48, 6);
+                        if (nWeek == 6) {
+                            strweek = "금요일";
+                            alarmTime(21, 43, 1);
+                            alarmTime(21, 44, 2);
+                            alarmTime(21, 45, 3);
+                            alarmTime(21, 46, 4);
+                            alarmTime(21, 47, 5);
+                            alarmTime(21, 48, 6);
                         }
-                        if(nWeek==7){
-                            strweek="토요일";
+                        if (nWeek == 7) {
+                            strweek = "토요일";
                         }
                         Thread.sleep(1000);
 
@@ -197,7 +217,79 @@ public class MainActivity extends AppCompatActivity {
 
         //socketdo();
 
+        fitnessOptions = FitnessOptions.builder()
+                .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .build();
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this), fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                    this,
+                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+                    GoogleSignIn.getLastSignedInAccount(this),
+                    fitnessOptions);
+        } else {
+            subscribe();
+        }
+        /*GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(this, fitnessOptions);
+        if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                    this, // your activity
+                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, // e.g. 1
+                    account,
+                    fitnessOptions);
+        } else {
+            subscribe();
+        }*/
+        readData();
     }
+
+    /** Records step data by requesting a subscription to background step data. */
+    public void subscribe() {
+        // To create a subscription, invoke the Recording API. As soon as the subscription is
+        // active, fitness data will start recording.
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .subscribe(DataType.TYPE_STEP_COUNT_CUMULATIVE)
+                .addOnCompleteListener(
+                        new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.i("Stepcount", "Successfully subscribed!");
+                                } else {
+                                    Log.w("Stepcount", "There was a problem subscribing.", task.getException());
+                                }
+                            }
+                        });
+    }
+
+    /**
+     * Reads the current daily step total, computed from midnight of the current day on the device's
+     * current timezone.
+     */
+    private void readData() {
+        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
+                .addOnSuccessListener(
+                        new OnSuccessListener<DataSet>() {
+                            @Override
+                            public void onSuccess(DataSet dataSet) {
+                                long total =
+                                        dataSet.isEmpty()
+                                                ? 0
+                                                : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
+                                Log.i("Stepcount", "Total steps: " + total);
+                                Toast.makeText(MainActivity.this, String.valueOf(total), Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.w("Stepcount", "There was a problem getting the step count.", e);
+                            }
+                        });
+    }
+
     public void alarmTime(int hour1,int min1,int alarm){
 
         //final Calendar cal;
@@ -437,6 +529,12 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 break;
+        }
+
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
+                subscribe();
+            }
         }
     }
 

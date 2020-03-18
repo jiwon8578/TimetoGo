@@ -59,6 +59,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -293,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
         Date now = new Date();
         cal.setTime(now);
         long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.DAY_OF_YEAR, -10);
+        cal.add(Calendar.DAY_OF_YEAR, -1); //어제 데이터
         long startTime = cal.getTimeInMillis();
 
         GoogleSignInOptionsExtension fitnessOptions =
@@ -326,6 +327,9 @@ public class MainActivity extends AppCompatActivity {
         Log.i("History", "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getDateInstance();
         DateFormat timeFormat = DateFormat.getTimeInstance();
+        SimpleDateFormat format = new SimpleDateFormat("HH");
+
+        int totalsteps = 0;
 
         for (DataPoint dp : dataSet.getDataPoints()) {
             Log.i("History", "Data point:");
@@ -335,8 +339,26 @@ public class MainActivity extends AppCompatActivity {
             for(Field field : dp.getDataType().getFields()) {
                 Log.i("History", "\tField: " + field.getName() +
                         " Value: " + dp.getValue(field));
+                totalsteps += dp.getValue(field).asInt();
+
+                String hour = format.format(dp.getStartTime(TimeUnit.MILLISECONDS));
+
+                Calendar cal = Calendar.getInstance();
+                Date now = new Date();
+                cal.setTime(now);
+                long curTime = cal.getTimeInMillis();
+
+                String curHour = format.format(curTime);
+
+                Log.i("History", "Hour:"+hour);
+                Log.i("History", "curHour:"+curHour);
+
+                if(hour == curHour) {
+                    break;
+                }
             }
         }
+        Log.i("History", "Totalsteps:"+totalsteps);
     }
 
     /** Records step data by requesting a subscription to background step data. */

@@ -50,6 +50,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 //흐름: 버스 번호를 입력 -> 해당 버스에 대한 노선 id가 나옴 -> 해당 노선에 대한 정류장들에 대한 정류장 정보가 나온다(정류장 id, 정류장 이름, 정류장 번호) -> 정류장 id, 노선 id, 순번을 입력하여 해당 정류장에 도착하는 특정 버스들에 대한 정보를 받아볼 수 있다.
@@ -91,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
     int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
 
     FitnessOptions fitnessOptions;
+
+    long total;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,6 +175,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 4) {
                             strweek = "수요일";
+                            alarmTime(21, 18, 1);
+                            alarmTime(21, 19, 2);
+                            alarmTime(21, 20, 3);
+                            alarmTime(21, 21, 4);
+                            alarmTime(21, 22, 5);
+                            alarmTime(21, 23, 6);
 
                         }
                         if (nWeek == 5) {
@@ -240,7 +250,14 @@ public class MainActivity extends AppCompatActivity {
         } else {
             subscribe();
         }*/
-        readData();
+        //readData();
+        Timer t = new Timer();
+        t.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                readData();
+            }
+        }, 0, 1000);
     }
 
     /** Records step data by requesting a subscription to background step data. */
@@ -273,12 +290,8 @@ public class MainActivity extends AppCompatActivity {
                         new OnSuccessListener<DataSet>() {
                             @Override
                             public void onSuccess(DataSet dataSet) {
-                                long total =
-                                        dataSet.isEmpty()
-                                                ? 0
-                                                : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
+                                total = dataSet.isEmpty() ? 0 : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
                                 Log.i("Stepcount", "Total steps: " + total);
-                                Toast.makeText(MainActivity.this, String.valueOf(total), Toast.LENGTH_SHORT).show();
                             }
                         })
                 .addOnFailureListener(
@@ -335,6 +348,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 while (true) {
+                    //readData();
 
                     try {
                         data = in.readLine();
@@ -344,6 +358,8 @@ public class MainActivity extends AppCompatActivity {
 
                             @Override
                              public void run() {
+                                //readData();
+
                                 data = data.replace("[", "");
                                 data = data.replace("'", "");
                                 data = data.replace(" ", "");
@@ -373,6 +389,9 @@ public class MainActivity extends AppCompatActivity {
                                 Time time = new Time(curLat, curLng);
                                 time.determineTime();
                                 items.add(time.text);
+
+                                //readData();
+                                items.add(String.valueOf(total));
                                 //NotificationSomethings(Integer.toString(time.early));
                                 // Toast.makeText(getApplicationContext(),Integer.toString(bus.averageSpd),Toast.LENGTH_SHORT).show();
                                 // Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();

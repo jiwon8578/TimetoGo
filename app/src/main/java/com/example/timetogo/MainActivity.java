@@ -111,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
 
     long total;
 
+    int average;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -210,10 +212,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 6) {
                             strweek = "금요일";
-                            alarmTime(21, 43, 1);
-                            alarmTime(21, 44, 2);
-                            alarmTime(21, 45, 3);
-                            alarmTime(21, 46, 4);
+                            alarmTime(1, 19, 1);
+                            alarmTime(1, 20, 2);
+                            alarmTime(1, 21, 3);
+                            alarmTime(1, 22, 4);
                             alarmTime(21, 47, 5);
                             alarmTime(21, 48, 6);
                         }
@@ -244,7 +246,14 @@ public class MainActivity extends AppCompatActivity {
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                historyAPI();
+                Timer t = new Timer();
+                t.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        historyAPI();
+                    }
+                }, 0, 1000);
+                //historyAPI();
             }
         });
 
@@ -296,6 +305,8 @@ public class MainActivity extends AppCompatActivity {
         long endTime = cal.getTimeInMillis();
         cal.add(Calendar.DAY_OF_YEAR, -1); //어제 데이터
         long startTime = cal.getTimeInMillis();
+        //Log.i("starttime", startTime+"");
+        //Log.i("endtime", endTime+"");
 
         GoogleSignInOptionsExtension fitnessOptions =
                 FitnessOptions.builder()
@@ -330,15 +341,16 @@ public class MainActivity extends AppCompatActivity {
         SimpleDateFormat format = new SimpleDateFormat("HH");
 
         int totalsteps = 0;
+        int num = 0;
+        average = 0;
 
         for (DataPoint dp : dataSet.getDataPoints()) {
-            Log.i("History", "Data point:");
-            Log.i("History", "\tType: " + dp.getDataType().getName());
-            Log.i("History", "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-            Log.i("History", "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            //Log.i("History", "Data point:");
+            //Log.i("History", "\tType: " + dp.getDataType().getName());
+            //Log.i("History", "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            //Log.i("History", "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
             for(Field field : dp.getDataType().getFields()) {
-                Log.i("History", "\tField: " + field.getName() +
-                        " Value: " + dp.getValue(field));
+                //Log.i("History", "\tField: " + field.getName() + " Value: " + dp.getValue(field));
                 totalsteps += dp.getValue(field).asInt();
 
                 String hour = format.format(dp.getStartTime(TimeUnit.MILLISECONDS));
@@ -350,15 +362,19 @@ public class MainActivity extends AppCompatActivity {
 
                 String curHour = format.format(curTime);
 
-                Log.i("History", "Hour:"+hour);
-                Log.i("History", "curHour:"+curHour);
+                //Log.i("History", "Hour:"+hour);
+                //Log.i("History", "curHour:"+curHour);
 
-                if(hour == curHour) {
+                num++;
+                average = totalsteps / num;
+                if(Integer.valueOf(hour) >= Integer.valueOf(curHour)) {
                     break;
                 }
             }
         }
         Log.i("History", "Totalsteps:"+totalsteps);
+        Log.i("History", "Num:"+num);
+        Log.i("History", "Average:"+average);
     }
 
     /** Records step data by requesting a subscription to background step data. */
@@ -492,7 +508,7 @@ public class MainActivity extends AppCompatActivity {
                                 items.add(time.text);
 
                                 //readData();
-                                items.add(String.valueOf(total));
+                                items.add("현재 걸음수: " + String.valueOf(total) + "\n" + "평균 걸음수: " + String.valueOf(average) + "\n");
                                 //NotificationSomethings(Integer.toString(time.early));
                                 // Toast.makeText(getApplicationContext(),Integer.toString(bus.averageSpd),Toast.LENGTH_SHORT).show();
                                 // Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();

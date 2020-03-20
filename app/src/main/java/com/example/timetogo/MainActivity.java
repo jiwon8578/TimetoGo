@@ -212,9 +212,9 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 6) {
                             strweek = "금요일";
-                            alarmTime(14, 20, 1);
-                            alarmTime(14, 21, 2);
-                            alarmTime(14, 22, 3);
+                            alarmTime(14, 31, 1);
+                            alarmTime(14, 32, 2);
+                            alarmTime(14, 33, 3);
                             alarmTime(14, 23, 4);
                             alarmTime(14, 16, 5);
                             alarmTime(14, 17, 6);
@@ -530,11 +530,26 @@ public class MainActivity extends AppCompatActivity {
                                 double distance = distance(lat1, lat2, lng1, lng2);
                                 Log.i("distance", distance+"");
 
+                                String stepMsg = "";
                                 if(distance <= 3000) {
-                                    items.add("거리 3키로 이하\n현재 걸음수: " + String.valueOf(total) + "\n" + "평균 걸음수: " + String.valueOf(average) + "\n");
+                                    if(total > average) {
+                                        stepMsg = "이동 거리가 3km 이하입니다.\n" +
+                                                "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
+                                                "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
+                                                "평소보다 많이 걸으셨으니 대중교통을 이용하셔도 좋습니다.\n";
+                                    } else {
+                                        stepMsg = "이동 거리가 3km 이하입니다.\n" +
+                                                "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
+                                                "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
+                                                "평소보다 걸음수가 적습니다. 목적지까지 도보로 이동하시는 것은 어떠신가요?\n";
+                                    }
                                 } else {
-                                    items.add("거리 3키로 이상\n현재 걸음수: " + String.valueOf(total) + "\n" + "평균 걸음수: " + String.valueOf(average) + "\n");
+                                    stepMsg = "이동 거리가 3km 이상입니다.\n" +
+                                            "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
+                                            "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
+                                            "목적지까지 대중교통을 이용해주세요.\n";
                                 }
+                                items.add(stepMsg);
 
                                 //readData();
 

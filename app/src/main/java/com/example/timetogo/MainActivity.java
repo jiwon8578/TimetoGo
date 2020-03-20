@@ -7,6 +7,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
+import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -16,6 +17,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -24,6 +26,30 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptionsExtension;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Response;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessOptions;
+import com.google.android.gms.fitness.data.Bucket;
+import com.google.android.gms.fitness.data.DataPoint;
+import com.google.android.gms.fitness.data.DataSet;
+import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.request.DataReadRequest;
+import com.google.android.gms.fitness.result.DataReadResponse;
+import com.google.android.gms.fitness.result.DataReadResult;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.BufferedReader;
@@ -32,8 +58,16 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 //흐름: 버스 번호를 입력 -> 해당 버스에 대한 노선 id가 나옴 -> 해당 노선에 대한 정류장들에 대한 정류장 정보가 나온다(정류장 id, 정류장 이름, 정류장 번호) -> 정류장 id, 노선 id, 순번을 입력하여 해당 정류장에 도착하는 특정 버스들에 대한 정보를 받아볼 수 있다.
 //busRouteNm이 버스 번호, busRouteId가 노선Id, station이 정류소Id
@@ -71,6 +105,14 @@ public class MainActivity extends AppCompatActivity {
 
     public Bus bus = new Bus();
 
+    int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
+
+    FitnessOptions fitnessOptions;
+
+    long total;
+
+    int average;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.enableDefaults();
 
         //위치 퍼미션
-        if(!checkLocationServicesStatus()) {
+        if (!checkLocationServicesStatus()) {
             showDialogForLocationServiceSetting();
         } else {
             checkRunTimePermission();
@@ -122,8 +164,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                while (true)
-                {
+                while (true) {
                     try {
                         final Calendar cal;
 
@@ -134,46 +175,52 @@ public class MainActivity extends AppCompatActivity {
 
                         long time = System.currentTimeMillis();
 
-                        if(nWeek==1){
-                            strweek="일요일";
+                        if (nWeek == 1) {
+                            strweek = "일요일";
                         }
-                        if(nWeek==2){
-                            strweek="월요일";
+                        if (nWeek == 2) {
+                            strweek = "월요일";
                         }
-                        if(nWeek==3){
-                            strweek="화요일";
-                            alarmTime(22,11,1);
-                            alarmTime(22,12,2);
-                            alarmTime(22,13,3);
-                            alarmTime(22,14,4);
-                            alarmTime(22,6,5);
-                            alarmTime(22,7,6);
+                        if (nWeek == 3) {
+                            strweek = "화요일";
+                            alarmTime(22, 11, 1);
+                            alarmTime(22, 12, 2);
+                            alarmTime(22, 13, 3);
+                            alarmTime(22, 14, 4);
+                            alarmTime(22, 6, 5);
+                            alarmTime(22, 7, 6);
                         }
-                        if(nWeek==4){
-                            strweek="수요일";
+                        if (nWeek == 4) {
+                            strweek = "수요일";
+                            alarmTime(21, 18, 1);
+                            alarmTime(21, 19, 2);
+                            alarmTime(21, 20, 3);
+                            alarmTime(21, 21, 4);
+                            alarmTime(21, 22, 5);
+                            alarmTime(21, 23, 6);
 
                         }
-                        if(nWeek==5){
-                            strweek="목요일";
-                            alarmTime(21,41,1);
-                            alarmTime(21,42,2);
-                            alarmTime(21,43,3);
-                            alarmTime(21,44,4);
-                            alarmTime(21,45,5);
-                            alarmTime(21,7,6);
-                            alarmTime(21,8, 7);
+                        if (nWeek == 5) {
+                            strweek = "목요일";
+                            alarmTime(21, 41, 1);
+                            alarmTime(21, 42, 2);
+                            alarmTime(21, 43, 3);
+                            alarmTime(21, 44, 4);
+                            alarmTime(21, 45, 5);
+                            alarmTime(21, 7, 6);
+                            alarmTime(21, 8, 7);
                         }
-                        if(nWeek==6){
-                            strweek="금요일";
-                            alarmTime(21,43,1);
-                            alarmTime(21,44,2);
-                            alarmTime(21,45,3);
-                            alarmTime(21,46,4);
-                            alarmTime(21,47,5);
-                            alarmTime(21,48, 6);
+                        if (nWeek == 6) {
+                            strweek = "금요일";
+                            alarmTime(14, 31, 1);
+                            alarmTime(14, 32, 2);
+                            alarmTime(14, 33, 3);
+                            alarmTime(14, 23, 4);
+                            alarmTime(14, 16, 5);
+                            alarmTime(14, 17, 6);
                         }
-                        if(nWeek==7){
-                            strweek="토요일";
+                        if (nWeek == 7) {
+                            strweek = "토요일";
                         }
                         Thread.sleep(1000);
 
@@ -196,8 +243,198 @@ public class MainActivity extends AppCompatActivity {
         })).start();
 
         //socketdo();
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                Timer t = new Timer();
+                t.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        historyAPI();
+                    }
+                }, 0, 1000);
+                //historyAPI();
+            }
+        });
+
+
+        fitnessOptions = FitnessOptions.builder()
+                .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .build();
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this), fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                    this,
+                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+                    GoogleSignIn.getLastSignedInAccount(this),
+                    fitnessOptions);
+        } else {
+            subscribe();
+        }
+        /*GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(this, fitnessOptions);
+        if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                    this, // your activity
+                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, // e.g. 1
+                    account,
+                    fitnessOptions);
+        } else {
+            subscribe();
+        }*/
+        //readData();
+
+
+
+        Timer t = new Timer();
+        t.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                readData();
+            }
+        }, 0, 1000);
+
 
     }
+
+    public static double distance(double lat1, double lat2, double lon1, double lon2) {
+        final int R = 6371; // Radius of the earth
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = R * c * 1000; // convert to meters
+
+        distance = Math.pow(distance, 2);
+
+        return Math.sqrt(distance);
+    }
+
+    public void historyAPI() {
+
+        // get the start and end date of the urrent mobile
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.DAY_OF_YEAR, -1); //어제 데이터
+        long startTime = cal.getTimeInMillis();
+        //Log.i("starttime", startTime+"");
+        //Log.i("endtime", endTime+"");
+
+        GoogleSignInOptionsExtension fitnessOptions =
+                FitnessOptions.builder()
+                        .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                        .build();
+
+        GoogleSignInAccount googleSignInAccount =
+                GoogleSignIn.getAccountForExtension(this, fitnessOptions);
+
+        Task<DataReadResponse> response = Fitness.getHistoryClient(this, googleSignInAccount)
+                .readData(new DataReadRequest.Builder()
+                        .read(DataType.TYPE_STEP_COUNT_DELTA)
+                        .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                        .build());
+
+        try {
+            //code that throws the exception
+            DataReadResponse readDataResult = Tasks.await(response);
+            DataSet dataSet = readDataResult.getDataSet(DataType.TYPE_STEP_COUNT_DELTA);
+            showDataSet(dataSet);
+        } catch (Exception e) {
+            //what to do when it throws the exception
+            Log.i("History", "Not working");
+        }
+
+    }
+
+    private void showDataSet(DataSet dataSet) {
+        Log.i("History", "Data returned for Data type: " + dataSet.getDataType().getName());
+        DateFormat dateFormat = DateFormat.getDateInstance();
+        DateFormat timeFormat = DateFormat.getTimeInstance();
+        SimpleDateFormat format = new SimpleDateFormat("HH");
+
+        int totalsteps = 0;
+        int num = 0;
+        average = 0;
+
+        for (DataPoint dp : dataSet.getDataPoints()) {
+            //Log.i("History", "Data point:");
+            //Log.i("History", "\tType: " + dp.getDataType().getName());
+            //Log.i("History", "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            //Log.i("History", "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            for(Field field : dp.getDataType().getFields()) {
+                //Log.i("History", "\tField: " + field.getName() + " Value: " + dp.getValue(field));
+                totalsteps += dp.getValue(field).asInt();
+
+                String hour = format.format(dp.getStartTime(TimeUnit.MILLISECONDS));
+
+                Calendar cal = Calendar.getInstance();
+                Date now = new Date();
+                cal.setTime(now);
+                long curTime = cal.getTimeInMillis();
+
+                String curHour = format.format(curTime);
+
+                //Log.i("History", "Hour:"+hour);
+                //Log.i("History", "curHour:"+curHour);
+
+                num++;
+                average = totalsteps / num;
+                if(Integer.valueOf(hour) >= Integer.valueOf(curHour)) {
+                    break;
+                }
+            }
+        }
+        Log.i("History", "Totalsteps:"+totalsteps);
+        Log.i("History", "Num:"+num);
+        Log.i("History", "Average:"+average);
+    }
+
+    /** Records step data by requesting a subscription to background step data. */
+    public void subscribe() {
+        // To create a subscription, invoke the Recording API. As soon as the subscription is
+        // active, fitness data will start recording.
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .subscribe(DataType.TYPE_STEP_COUNT_CUMULATIVE)
+                .addOnCompleteListener(
+                        new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.i("Stepcount", "Successfully subscribed!");
+                                } else {
+                                    Log.w("Stepcount", "There was a problem subscribing.", task.getException());
+                                }
+                            }
+                        });
+    }
+
+    /**
+     * Reads the current daily step total, computed from midnight of the current day on the device's
+     * current timezone.
+     */
+    private void readData() {
+        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
+                .addOnSuccessListener(
+                        new OnSuccessListener<DataSet>() {
+                            @Override
+                            public void onSuccess(DataSet dataSet) {
+                                total = dataSet.isEmpty() ? 0 : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
+                                Log.i("Stepcount", "Total steps: " + total);
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.w("Stepcount", "There was a problem getting the step count.", e);
+                            }
+                        });
+    }
+
     public void alarmTime(int hour1,int min1,int alarm){
 
         //final Calendar cal;
@@ -243,6 +480,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 while (true) {
+                    //readData();
 
                     try {
                         data = in.readLine();
@@ -252,6 +490,8 @@ public class MainActivity extends AppCompatActivity {
 
                             @Override
                              public void run() {
+                                //readData();
+
                                 data = data.replace("[", "");
                                 data = data.replace("'", "");
                                 data = data.replace(" ", "");
@@ -281,6 +521,38 @@ public class MainActivity extends AppCompatActivity {
                                 Time time = new Time(curLat, curLng);
                                 time.determineTime();
                                 items.add(time.text);
+
+                                double lat1 = Double.parseDouble(bus.lat1);
+                                double lat2 = Double.parseDouble(bus.lat2);
+                                double lng1 = Double.parseDouble(bus.lng1);
+                                double lng2 = Double.parseDouble(bus.lng2);
+
+                                double distance = distance(lat1, lat2, lng1, lng2);
+                                Log.i("distance", distance+"");
+
+                                String stepMsg = "";
+                                if(distance <= 3000) {
+                                    if(total > average) {
+                                        stepMsg = "이동 거리가 3km 이하입니다.\n" +
+                                                "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
+                                                "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
+                                                "평소보다 많이 걸으셨으니 대중교통을 이용하셔도 좋습니다.\n";
+                                    } else {
+                                        stepMsg = "이동 거리가 3km 이하입니다.\n" +
+                                                "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
+                                                "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
+                                                "평소보다 걸음수가 적습니다. 목적지까지 도보로 이동하시는 것은 어떠신가요?\n";
+                                    }
+                                } else {
+                                    stepMsg = "이동 거리가 3km 이상입니다.\n" +
+                                            "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
+                                            "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
+                                            "목적지까지 대중교통을 이용해주세요.\n";
+                                }
+                                items.add(stepMsg);
+
+                                //readData();
+
                                 //NotificationSomethings(Integer.toString(time.early));
                                 // Toast.makeText(getApplicationContext(),Integer.toString(bus.averageSpd),Toast.LENGTH_SHORT).show();
                                 // Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
@@ -437,6 +709,12 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 break;
+        }
+
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
+                subscribe();
+            }
         }
     }
 

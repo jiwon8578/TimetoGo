@@ -14,6 +14,8 @@ public class Bus {
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
     public ArrayList<String> stationNoList; //정류소 번호들의 리스트
     public ArrayList<String> seqList; //정류소 순번들의 리스트
+    public ArrayList<String> xList; //gpsX의 리스트
+    public ArrayList<String> yList; //gpsY의 리스트
     public String text = "";
 
     public String destStn;
@@ -23,6 +25,11 @@ public class Bus {
     public int totalTime = 0;
     static public int averageSpd = 0;
 
+    public String lat1 = "";
+    public String lat2 = "";
+    public String lng1 = "";
+    public String lng2 = "";
+
     public void showBusList(String bus, String station, String destStn) {
         busRouteList = new ArrayList<String>();
         stationList = new ArrayList<String>();
@@ -31,6 +38,8 @@ public class Bus {
         seqList = new ArrayList<String>();
         text = "";
         travelTimeList = new ArrayList<String>();
+        xList = new ArrayList<String>();
+        yList = new ArrayList<String>();
 
         this.destStn = destStn;
         getBusRouteList(bus);
@@ -58,6 +67,8 @@ public class Bus {
         for(int i = 0; i < travelTimeList.size(); i++) {
             if(stationNoList.get(i).equals(station)) {
                 isStart = true;
+                lat1 = yList.get(i);
+                lng1 = xList.get(i);
             }
             if(isStart) {
                 time = travelTimeList.get(i);
@@ -72,9 +83,19 @@ public class Bus {
             }
             if(stationNoList.get(i).equals(destStn)) {
                 isStart = false;
+                lat2 = yList.get(i);
+                lng2 = xList.get(i);
             }
         }
-        averageSpd = totalTime / count;
+
+        if(count != 0) {
+            averageSpd = totalTime / count;
+        }
+
+        Log.i("lat1", lat1);
+        Log.i("lat2", lat2);
+        Log.i("lng1", lng1);
+        Log.i("lng2", lng2);
     }
 
     public void getBusAPI(String stId, String busRouteId, String ord) { //getLowArrInfoByStIdList
@@ -136,9 +157,9 @@ public class Bus {
 
     public void getStationsByRouteList(String busRouteId) { //busRouteId를 넣으면 stationId를 리턴한다.
 
-        boolean in_station = false, in_stationNm = false, in_stationNo = false, in_seq = false, in_sectSpd = false;
+        boolean in_station = false, in_stationNm = false, in_stationNo = false, in_seq = false, in_sectSpd = false, in_gpsX = false, in_gpsY = false;
 
-        String station = null, stationNm = null, stationNo = null, seq = null, sectSpd = null;
+        String station = null, stationNm = null, stationNo = null, seq = null, sectSpd = null, gpsX = null, gpsY = null;
 
         try {
             URL url = new URL("http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute?serviceKey=4Sc5MPbhBeWyQLVQ1JM9AqGWarV75Qk9hG%2FLuWVNl7%2B4hyHn8nP0mGrsxqDJHcgRdrSYT7sjblUpHpqjDcXdbw%3D%3D&busRouteId="+busRouteId);
@@ -168,6 +189,12 @@ public class Bus {
                         if(parser.getName().equals("sectSpd")) {
                             in_sectSpd = true;
                         }
+                        if(parser.getName().equals("gpsX")) {
+                            in_gpsX = true;
+                        }
+                        if(parser.getName().equals("gpsY")) {
+                            in_gpsY = true;
+                        }
                         break;
                     case XmlPullParser.TEXT:
                         if(in_station) {
@@ -190,6 +217,14 @@ public class Bus {
                             sectSpd = parser.getText();
                             in_sectSpd = false;
                         }
+                        if(in_gpsX) {
+                            gpsX = parser.getText();
+                            in_gpsX = false;
+                        }
+                        if(in_gpsY) {
+                            gpsY = parser.getText();
+                            in_gpsY = false;
+                        }
                         break;
                     case XmlPullParser.END_TAG:
                         if(parser.getName().equals("itemList")) {
@@ -198,6 +233,8 @@ public class Bus {
                             stationNoList.add(stationNo);
                             seqList.add(seq);
                             travelTimeList.add(sectSpd);
+                            xList.add(gpsX);
+                            yList.add(gpsY);
                         }
                         break;
                 }

@@ -212,12 +212,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 6) {
                             strweek = "금요일";
-                            alarmTime(1, 19, 1);
-                            alarmTime(1, 20, 2);
-                            alarmTime(1, 21, 3);
-                            alarmTime(1, 22, 4);
-                            alarmTime(21, 47, 5);
-                            alarmTime(21, 48, 6);
+                            alarmTime(14, 20, 1);
+                            alarmTime(14, 21, 2);
+                            alarmTime(14, 22, 3);
+                            alarmTime(14, 23, 4);
+                            alarmTime(14, 16, 5);
+                            alarmTime(14, 17, 6);
                         }
                         if (nWeek == 7) {
                             strweek = "토요일";
@@ -294,6 +294,21 @@ public class MainActivity extends AppCompatActivity {
         }, 0, 1000);
 
 
+    }
+
+    public static double distance(double lat1, double lat2, double lon1, double lon2) {
+        final int R = 6371; // Radius of the earth
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = R * c * 1000; // convert to meters
+
+        distance = Math.pow(distance, 2);
+
+        return Math.sqrt(distance);
     }
 
     public void historyAPI() {
@@ -507,8 +522,22 @@ public class MainActivity extends AppCompatActivity {
                                 time.determineTime();
                                 items.add(time.text);
 
+                                double lat1 = Double.parseDouble(bus.lat1);
+                                double lat2 = Double.parseDouble(bus.lat2);
+                                double lng1 = Double.parseDouble(bus.lng1);
+                                double lng2 = Double.parseDouble(bus.lng2);
+
+                                double distance = distance(lat1, lat2, lng1, lng2);
+                                Log.i("distance", distance+"");
+
+                                if(distance <= 3000) {
+                                    items.add("거리 3키로 이하\n현재 걸음수: " + String.valueOf(total) + "\n" + "평균 걸음수: " + String.valueOf(average) + "\n");
+                                } else {
+                                    items.add("거리 3키로 이상\n현재 걸음수: " + String.valueOf(total) + "\n" + "평균 걸음수: " + String.valueOf(average) + "\n");
+                                }
+
                                 //readData();
-                                items.add("현재 걸음수: " + String.valueOf(total) + "\n" + "평균 걸음수: " + String.valueOf(average) + "\n");
+
                                 //NotificationSomethings(Integer.toString(time.early));
                                 // Toast.makeText(getApplicationContext(),Integer.toString(bus.averageSpd),Toast.LENGTH_SHORT).show();
                                 // Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();

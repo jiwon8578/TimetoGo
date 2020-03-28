@@ -7,6 +7,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -63,11 +64,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import android.speech.tts.TextToSpeech;
+import android.os.Build;
 
 //흐름: 버스 번호를 입력 -> 해당 버스에 대한 노선 id가 나옴 -> 해당 노선에 대한 정류장들에 대한 정류장 정보가 나온다(정류장 id, 정류장 이름, 정류장 번호) -> 정류장 id, 노선 id, 순번을 입력하여 해당 정류장에 도착하는 특정 버스들에 대한 정보를 받아볼 수 있다.
 //busRouteNm이 버스 번호, busRouteId가 노선Id, station이 정류소Id
@@ -112,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
     long total;
 
     int average;
+
+    TextToSpeech tts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -221,6 +228,11 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 7) {
                             strweek = "토요일";
+                            alarmTime(17, 51, 1);
+                            alarmTime(17, 52, 2);
+                            alarmTime(17, 53, 3);
+                            alarmTime(17, 54, 4);
+                            alarmTime(17, 55, 5);
                         }
                         Thread.sleep(1000);
 
@@ -293,7 +305,34 @@ public class MainActivity extends AppCompatActivity {
             }
         }, 0, 1000);
 
+        tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    //사용할 언어를 설정
+                    int result = tts.setLanguage(Locale.KOREA);
+                    //언어 데이터가 없거나 혹은 언어가 지원하지 않으면...
+                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Toast.makeText(MainActivity.this, "이 언어는 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        //음성 톤
+                        tts.setPitch(0.7f);
+                        //읽는 속도
+                        tts.setSpeechRate(1.2f);
+                    }
+                    Log.i("tts", "tts init");
+                }
+            }
+        });
 
+    }
+
+    private void Speech(String text) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
+            // API 20
+        else
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
     }
 
     public static double distance(double lat1, double lat2, double lon1, double lon2) {
@@ -557,6 +596,9 @@ public class MainActivity extends AppCompatActivity {
                                 // Toast.makeText(getApplicationContext(),Integer.toString(bus.averageSpd),Toast.LENGTH_SHORT).show();
                                 // Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
 
+                                Speech(bus.text + time.text + stepMsg);
+                                //Speech(time.text);
+                                //Speech(stepMsg);
                             }
                          });
 
@@ -623,6 +665,10 @@ public class MainActivity extends AppCompatActivity {
             socket.close();
         } catch(IOException e) {
             e.printStackTrace();
+        }
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
         }
     }
 

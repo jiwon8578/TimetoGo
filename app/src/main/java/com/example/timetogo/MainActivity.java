@@ -155,19 +155,19 @@ public class MainActivity extends AppCompatActivity {
                 View view =  super.getView(position, convertView, parent);
 
                 GradientDrawable gdYellow = new GradientDrawable();
-                gdYellow.setColor(getColor(R.color.yellow));
+                gdYellow.setColor(getColor(android.R.color.white));
                 gdYellow.setCornerRadius(30);
-                gdYellow.setStroke(5, getColor(R.color.yellow));
+                gdYellow.setStroke(10, getColor(R.color.yellow));
 
                 GradientDrawable gdOrange = new GradientDrawable();
-                gdOrange.setColor(getColor(R.color.orange));
+                gdOrange.setColor(getColor(android.R.color.white));
                 gdOrange.setCornerRadius(30);
-                gdOrange.setStroke(5, getColor(R.color.orange));
+                gdOrange.setStroke(10, getColor(R.color.orange));
 
                 GradientDrawable gdGray = new GradientDrawable();
-                gdGray.setColor(getColor(R.color.colorBackgroundDark));
+                gdGray.setColor(getColor(android.R.color.white));
                 gdGray.setCornerRadius(30);
-                gdGray.setStroke(5, getColor(R.color.colorBackgroundDark));
+                gdGray.setStroke(10, getColor(R.color.colorBackground));
 
                 if(position % 3 == 2) {
                     view.setBackground(gdYellow);
@@ -246,11 +246,11 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 5) {
                             strweek = "목요일";
-                            alarmTime(23, 28, 1);
-                            alarmTime(23, 29, 2);
-                            alarmTime(23, 30, 3);
-                            alarmTime(23, 28, 4);
-                            alarmTime(22, 19, 5);
+                            alarmTime(23, 39, 1);
+                            alarmTime(23, 40, 2);
+                            alarmTime(23, 41, 3);
+                            alarmTime(23, 42, 4);
+                            alarmTime(23, 43, 5);
                             alarmTime(22, 7, 6);
                             alarmTime(22, 8, 7);
                         }

@@ -6,7 +6,8 @@
     android:layout_height="wrap_content"
     android:textSize="30dp"
     android:background="@drawable/textview"
-    android:textColor="@android:color/black"/>
+    android:textColor="@android:color/black"
+    android:padding="10dp"/>
 
 
 

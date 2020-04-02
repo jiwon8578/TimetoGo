@@ -143,7 +143,7 @@ public class Bus {
                         break;
                     case XmlPullParser.END_TAG:
                         if(parser.getName().equals("itemList")) {
-                            text = "버스번호: " + rtNm + "\n" + "첫번째 전: " + arrmsg1 + "\n" + "두번째 전" + arrmsg2+"\n";
+                            text = "버스번호: " + rtNm + "\n" + "첫번째 전: " + arrmsg1 + "\n" + "두번째 전" + arrmsg2;
                         }
                         break;
                 }

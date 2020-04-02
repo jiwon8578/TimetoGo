@@ -210,19 +210,19 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 5) {
                             strweek = "목요일";
-                            alarmTime(21, 24, 1);
-                            alarmTime(21, 25, 2);
-                            alarmTime(21, 26, 3);
-                            alarmTime(21, 18, 4);
+                            alarmTime(21, 41, 1);
+                            alarmTime(21, 42, 2);
+                            alarmTime(21, 43, 3);
+                            alarmTime(21, 44, 4);
                             alarmTime(21, 19, 5);
                             alarmTime(21, 7, 6);
                             alarmTime(21, 8, 7);
                         }
                         if (nWeek == 6) {
                             strweek = "금요일";
-                            alarmTime(14, 31, 1);
-                            alarmTime(14, 32, 2);
-                            alarmTime(14, 33, 3);
+                            alarmTime(14, 36, 1);
+                            alarmTime(14, 37, 2);
+                            alarmTime(14, 38, 3);
                             alarmTime(14, 23, 4);
                             alarmTime(14, 16, 5);
                             alarmTime(14, 17, 6);
@@ -576,18 +576,18 @@ public class MainActivity extends AppCompatActivity {
                                         stepMsg = "이동 거리가 3km 이하입니다.\n" +
                                                 "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
                                                 "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                                "평소보다 많이 걸으셨으니 대중교통을 이용하셔도 좋습니다.\n";
+                                                "평소보다 많이 걸으셨으니 대중교통을 이용하셔도 좋습니다.";
                                     } else {
                                         stepMsg = "이동 거리가 3km 이하입니다.\n" +
                                                 "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
                                                 "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                                "평소보다 걸음수가 적습니다. 목적지까지 도보로 이동하시는 것은 어떠신가요?\n";
+                                                "평소보다 걸음수가 적습니다. 목적지까지 도보로 이동하시는 것은 어떠신가요?";
                                     }
                                 } else {
                                     stepMsg = "이동 거리가 3km 이상입니다.\n" +
                                             "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
                                             "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                            "목적지까지 대중교통을 이용해주세요.\n";
+                                            "목적지까지 대중교통을 이용해주세요.";
                                 }
                                 items.add(stepMsg);
 

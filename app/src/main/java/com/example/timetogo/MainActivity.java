@@ -246,11 +246,11 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 5) {
                             strweek = "목요일";
-                            alarmTime(23, 39, 1);
-                            alarmTime(23, 40, 2);
-                            alarmTime(23, 41, 3);
-                            alarmTime(23, 42, 4);
-                            alarmTime(23, 43, 5);
+                            alarmTime(23, 44, 1);
+                            alarmTime(23, 45, 2);
+                            alarmTime(23, 46, 3);
+                            alarmTime(23, 47, 4);
+                            alarmTime(23, 48, 5);
                             alarmTime(22, 7, 6);
                             alarmTime(22, 8, 7);
                         }

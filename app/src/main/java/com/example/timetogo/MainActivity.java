@@ -154,21 +154,32 @@ public class MainActivity extends AppCompatActivity {
                 // Get the current item for ListView
                 View view =  super.getView(position, convertView, parent);
 
-                GradientDrawable gd = new GradientDrawable();
-                gd.setColor(0xFF00FF00);
-                gd.setCornerRadius(30);
-                gd.setStroke(1, 0xFF000000);
+                GradientDrawable gdYellow = new GradientDrawable();
+                gdYellow.setColor(getColor(R.color.yellow));
+                gdYellow.setCornerRadius(30);
+                gdYellow.setStroke(5, getColor(R.color.yellow));
 
-                if(position % 2 == 1) {
-                    view.setBackground(gd);
+                GradientDrawable gdOrange = new GradientDrawable();
+                gdOrange.setColor(getColor(R.color.orange));
+                gdOrange.setCornerRadius(30);
+                gdOrange.setStroke(5, getColor(R.color.orange));
+
+                GradientDrawable gdGray = new GradientDrawable();
+                gdGray.setColor(getColor(R.color.colorBackgroundDark));
+                gdGray.setCornerRadius(30);
+                gdGray.setStroke(5, getColor(R.color.colorBackgroundDark));
+
+                if(position % 3 == 2) {
+                    view.setBackground(gdYellow);
+                } else if (position % 3 == 1){
+                    view.setBackground(gdOrange);
                 } else {
-                    view.setBackgroundColor(getResources().getColor(
-                            android.R.color.holo_red_light
-                    ));
+                    view.setBackground(gdGray);
                 }
                 return view;
             }
         };
+
         listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
 
@@ -235,10 +246,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 5) {
                             strweek = "목요일";
-                            alarmTime(22, 14, 1);
-                            alarmTime(22, 15, 2);
-                            alarmTime(22, 16, 3);
-                            alarmTime(22, 44, 4);
+                            alarmTime(23, 28, 1);
+                            alarmTime(23, 29, 2);
+                            alarmTime(23, 30, 3);
+                            alarmTime(23, 28, 4);
                             alarmTime(22, 19, 5);
                             alarmTime(22, 7, 6);
                             alarmTime(22, 8, 7);

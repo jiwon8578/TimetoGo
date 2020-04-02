@@ -4,4 +4,7 @@
     <color name="colorBackgroundDark">#525252</color>
     <color name="orange">#c55a11</color>
     <color name="yellow">#ffbf00</color>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
 </resources>

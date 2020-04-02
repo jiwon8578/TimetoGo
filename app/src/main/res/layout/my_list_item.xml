@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:textSize="30dp"
-    android:background="@drawable/login_button"
+    android:background="@drawable/textview"
     android:textColor="@android:color/black"/>
 
 

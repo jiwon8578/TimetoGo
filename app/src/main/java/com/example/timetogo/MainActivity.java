@@ -1,6 +1,7 @@
 package com.example.timetogo;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -17,12 +18,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.GradientDrawable;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -141,8 +145,41 @@ public class MainActivity extends AppCompatActivity {
         //Toast.makeText(getApplicationContext(),Double.toString(curLng),Toast.LENGTH_SHORT).show();
 
         items = new ArrayList<String>();
-        items.add("test");
-        adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, items);
+        // items.add("test");
+        // adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, items);
+        adapter = new ArrayAdapter<String>(MainActivity.this, R.layout.my_list_item, items) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                // Get the current item for ListView
+                View view =  super.getView(position, convertView, parent);
+
+                GradientDrawable gdYellow = new GradientDrawable();
+                gdYellow.setColor(getColor(android.R.color.white));
+                gdYellow.setCornerRadius(30);
+                gdYellow.setStroke(10, getColor(R.color.yellow));
+
+                GradientDrawable gdOrange = new GradientDrawable();
+                gdOrange.setColor(getColor(android.R.color.white));
+                gdOrange.setCornerRadius(30);
+                gdOrange.setStroke(10, getColor(R.color.orange));
+
+                GradientDrawable gdGray = new GradientDrawable();
+                gdGray.setColor(getColor(android.R.color.white));
+                gdGray.setCornerRadius(30);
+                gdGray.setStroke(10, getColor(R.color.colorBackground));
+
+                if(position % 3 == 2) {
+                    view.setBackground(gdYellow);
+                } else if (position % 3 == 1){
+                    view.setBackground(gdOrange);
+                } else {
+                    view.setBackground(gdGray);
+                }
+                return view;
+            }
+        };
+
         listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
 
@@ -199,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 4) {
                             strweek = "수요일";
-                            alarmTime(21, 18, 1);
+                            alarmTime(21, 0, 1);
                             alarmTime(21, 19, 2);
                             alarmTime(21, 20, 3);
                             alarmTime(21, 21, 4);
@@ -209,19 +246,19 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 5) {
                             strweek = "목요일";
-                            alarmTime(21, 41, 1);
-                            alarmTime(21, 42, 2);
-                            alarmTime(21, 43, 3);
-                            alarmTime(21, 44, 4);
-                            alarmTime(21, 45, 5);
-                            alarmTime(21, 7, 6);
-                            alarmTime(21, 8, 7);
+                            alarmTime(23, 56, 1);
+                            alarmTime(23, 57, 2);
+                            alarmTime(23, 58, 3);
+                            alarmTime(23, 47, 4);
+                            alarmTime(23, 48, 5);
+                            alarmTime(22, 7, 6);
+                            alarmTime(22, 8, 7);
                         }
                         if (nWeek == 6) {
                             strweek = "금요일";
-                            alarmTime(14, 31, 1);
-                            alarmTime(14, 32, 2);
-                            alarmTime(14, 33, 3);
+                            alarmTime(14, 36, 1);
+                            alarmTime(14, 37, 2);
+                            alarmTime(14, 38, 3);
                             alarmTime(14, 23, 4);
                             alarmTime(14, 16, 5);
                             alarmTime(14, 17, 6);
@@ -575,18 +612,18 @@ public class MainActivity extends AppCompatActivity {
                                         stepMsg = "이동 거리가 3km 이하입니다.\n" +
                                                 "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
                                                 "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                                "평소보다 많이 걸으셨으니 대중교통을 이용하셔도 좋습니다.\n";
+                                                "평소보다 많이 걸으셨으니 대중교통을 이용하셔도 좋습니다.";
                                     } else {
                                         stepMsg = "이동 거리가 3km 이하입니다.\n" +
                                                 "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
                                                 "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                                "평소보다 걸음수가 적습니다. 목적지까지 도보로 이동하시는 것은 어떠신가요?\n";
+                                                "평소보다 걸음수가 적습니다. 목적지까지 도보로 이동하시는 것은 어떠신가요?";
                                     }
                                 } else {
                                     stepMsg = "이동 거리가 3km 이상입니다.\n" +
                                             "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
                                             "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                            "목적지까지 대중교통을 이용해주세요.\n";
+                                            "목적지까지 대중교통을 이용해주세요.";
                                 }
                                 items.add(stepMsg);
 

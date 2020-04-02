@@ -1,6 +1,7 @@
 package com.example.timetogo;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -17,12 +18,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.GradientDrawable;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -143,7 +147,28 @@ public class MainActivity extends AppCompatActivity {
         items = new ArrayList<String>();
         // items.add("test");
         // adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, items);
-        adapter = new ArrayAdapter<String>(MainActivity.this, R.layout.my_list_item, items);
+        adapter = new ArrayAdapter<String>(MainActivity.this, R.layout.my_list_item, items) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                // Get the current item for ListView
+                View view =  super.getView(position, convertView, parent);
+
+                GradientDrawable gd = new GradientDrawable();
+                gd.setColor(0xFF00FF00);
+                gd.setCornerRadius(30);
+                gd.setStroke(1, 0xFF000000);
+
+                if(position % 2 == 1) {
+                    view.setBackground(gd);
+                } else {
+                    view.setBackgroundColor(getResources().getColor(
+                            android.R.color.holo_red_light
+                    ));
+                }
+                return view;
+            }
+        };
         listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
 
@@ -210,13 +235,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 5) {
                             strweek = "목요일";
-                            alarmTime(21, 41, 1);
-                            alarmTime(21, 42, 2);
-                            alarmTime(21, 43, 3);
-                            alarmTime(21, 44, 4);
-                            alarmTime(21, 19, 5);
-                            alarmTime(21, 7, 6);
-                            alarmTime(21, 8, 7);
+                            alarmTime(22, 14, 1);
+                            alarmTime(22, 15, 2);
+                            alarmTime(22, 16, 3);
+                            alarmTime(22, 44, 4);
+                            alarmTime(22, 19, 5);
+                            alarmTime(22, 7, 6);
+                            alarmTime(22, 8, 7);
                         }
                         if (nWeek == 6) {
                             strweek = "금요일";

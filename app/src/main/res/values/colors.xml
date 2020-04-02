@@ -2,6 +2,6 @@
 <resources>
     <color name="colorBackground">#D0CECE</color>
     <color name="colorBackgroundDark">#525252</color>
-    <color name="yellow">#c55a11</color>
-    <color name="yellow">#c55a11</color>
+    <color name="orange">#c55a11</color>
+    <color name="yellow">#ffbf00</color>
 </resources>

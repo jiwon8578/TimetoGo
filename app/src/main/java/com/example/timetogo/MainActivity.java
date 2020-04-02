@@ -141,8 +141,9 @@ public class MainActivity extends AppCompatActivity {
         //Toast.makeText(getApplicationContext(),Double.toString(curLng),Toast.LENGTH_SHORT).show();
 
         items = new ArrayList<String>();
-        items.add("test");
-        adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, items);
+        // items.add("test");
+        // adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, items);
+        adapter = new ArrayAdapter<String>(MainActivity.this, R.layout.my_list_item, items);
         listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
 
@@ -199,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 4) {
                             strweek = "수요일";
-                            alarmTime(21, 18, 1);
+                            alarmTime(21, 0, 1);
                             alarmTime(21, 19, 2);
                             alarmTime(21, 20, 3);
                             alarmTime(21, 21, 4);
@@ -209,11 +210,11 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 5) {
                             strweek = "목요일";
-                            alarmTime(21, 41, 1);
-                            alarmTime(21, 42, 2);
-                            alarmTime(21, 43, 3);
-                            alarmTime(21, 44, 4);
-                            alarmTime(21, 45, 5);
+                            alarmTime(21, 24, 1);
+                            alarmTime(21, 25, 2);
+                            alarmTime(21, 26, 3);
+                            alarmTime(21, 18, 4);
+                            alarmTime(21, 19, 5);
                             alarmTime(21, 7, 6);
                             alarmTime(21, 8, 7);
                         }

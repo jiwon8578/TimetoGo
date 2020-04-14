@@ -7,6 +7,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -84,22 +90,22 @@ import android.os.Build;
 public class MainActivity extends AppCompatActivity {
     static int num = 0;
     public static final String NOTIFICATION_CHANNEL_ID = "10001";
-    private int count = 0;
-    public Socket socket;
-    public BufferedReader in;
-    public PrintWriter out;
+    public static int count = 0;
+    public static Socket socket;
+    public static BufferedReader in;
+    public static PrintWriter out;
     static int nWeek;
     static int hour;
     static int min;
     static String strweek = null;
-    String data;
+    public static String data;
 
-    TextView result;
+    public static TextView result;
 
-    String[] data_split;
-    static String bus1;
-    static String station1;
-    static String destStn;
+    public static String[] data_split;
+    public static String bus1;
+    public static String station1;
+    public static String destStn;
 
     static ArrayList<String> items;
     static ArrayAdapter<String> adapter;
@@ -112,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
     static double curLat;
     static double curLng;
 
-    public Bus bus = new Bus();
+    public static Bus bus = new Bus();
 
     int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
 
@@ -129,6 +135,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         StrictMode.enableDefaults();
+
+        //OneTimeWorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(MyWorker.class).build();
+        //WorkManager.getInstance(getApplicationContext()).enqueue(uploadWorkRequest);
+
+        Constraints constraints = new Constraints.Builder().setRequiresCharging(true).build();
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(MyWorker.class, 15, TimeUnit.MINUTES).setConstraints(constraints).build();
+        WorkManager.getInstance(getApplicationContext()).enqueue(request);
 
         //위치 퍼미션
         if (!checkLocationServicesStatus()) {
@@ -183,7 +196,16 @@ public class MainActivity extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
 
-        Thread worker = new Thread() {
+        //OneTimeWorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(MyWorker.class).build();
+        //WorkManager.getInstance(getApplicationContext()).enqueue(uploadWorkRequest);
+
+        /*Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
+        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(MyWorker.class)
+                .setConstraints(constraints)
+                .build();
+        WorkManager.getInstance(getApplicationContext()).enqueue(request);*/
+
+        /*Thread worker = new Thread() {
             public void run() {
                 try {
                     socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
@@ -196,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         };
-        worker.start();
+        worker.start();*/
 
         //Time time = new Time(curLat, curLng);
         //time.determineTime();
@@ -205,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
         result = (TextView) findViewById(R.id.result);
 
         (new Thread(new Runnable() {
+
 
             @Override
             public void run() {
@@ -224,11 +247,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                         if (nWeek == 2) {
                             strweek = "월요일";
+                            alarmTime(23, 57, 1);
+                            alarmTime(23, 58, 2);
                         }
                         if (nWeek == 3) {
                             strweek = "화요일";
-                            alarmTime(22, 11, 1);
-                            alarmTime(22, 12, 2);
+                            alarmTime(23, 56, 1);
+                            alarmTime(23, 57, 2);
                             alarmTime(22, 13, 3);
                             alarmTime(22, 14, 4);
                             alarmTime(22, 6, 5);
@@ -273,16 +298,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         Thread.sleep(1000);
 
-                        /*Thread.sleep(1000);
-                        runOnUiThread(new Runnable() // start actions in UI thread
-                        {
 
-                            @Override
-                            public void run() {
-
-
-                            }
-                        });*/
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

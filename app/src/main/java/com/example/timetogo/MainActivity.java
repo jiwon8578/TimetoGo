@@ -94,10 +94,10 @@ public class MainActivity extends AppCompatActivity {
     public static Socket socket;
     public static BufferedReader in;
     public static PrintWriter out;
-    static int nWeek;
-    static int hour;
-    static int min;
-    static String strweek = null;
+    public static int nWeek;
+    public static int hour;
+    public static int min;
+    public static String strweek = null;
     public static String data;
 
     public static TextView result;
@@ -124,11 +124,11 @@ public class MainActivity extends AppCompatActivity {
 
     FitnessOptions fitnessOptions;
 
-    long total;
+    public static long total;
 
-    int average;
+    public static int average;
 
-    TextToSpeech tts;
+    public static TextToSpeech tts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,12 +136,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         StrictMode.enableDefaults();
 
-        //OneTimeWorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(MyWorker.class).build();
-        //WorkManager.getInstance(getApplicationContext()).enqueue(uploadWorkRequest);
 
-        Constraints constraints = new Constraints.Builder().setRequiresCharging(true).build();
+        /*Constraints constraints = new Constraints.Builder().setRequiresCharging(true).build();
         PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(MyWorker.class, 15, TimeUnit.MINUTES).setConstraints(constraints).build();
-        WorkManager.getInstance(getApplicationContext()).enqueue(request);
+        WorkManager.getInstance(getApplicationContext()).enqueue(request);*/
+        Intent startSocket = new Intent(this, MyService.class);
+        startSocket.setAction(MyService.START_SOCKET);
+        startService(startSocket);
 
         //위치 퍼미션
         if (!checkLocationServicesStatus()) {
@@ -226,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
 
         result = (TextView) findViewById(R.id.result);
 
-        (new Thread(new Runnable() {
+        /*(new Thread(new Runnable() {
 
 
             @Override
@@ -305,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
 
                 }
             }
-        })).start();
+        })).start();*/
 
         //socketdo();
         AsyncTask.execute(new Runnable() {
@@ -714,11 +715,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        try {
+        /*try {
             socket.close();
         } catch(IOException e) {
             e.printStackTrace();
-        }
+        }*/
         if (tts != null) {
             tts.stop();
             tts.shutdown();

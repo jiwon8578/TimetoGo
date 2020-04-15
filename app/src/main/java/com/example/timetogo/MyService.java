@@ -3,16 +3,16 @@ package com.example.timetogo;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
-import androidx.annotation.NonNull;
+
 import androidx.core.app.NotificationCompat;
-import androidx.work.Worker;
-import androidx.work.WorkerParameters;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,101 +32,115 @@ import static com.example.timetogo.MainActivity.data;
 import static com.example.timetogo.MainActivity.data_split;
 import static com.example.timetogo.MainActivity.destStn;
 import static com.example.timetogo.MainActivity.hour;
+import static com.example.timetogo.MainActivity.in;
 import static com.example.timetogo.MainActivity.items;
 import static com.example.timetogo.MainActivity.min;
 import static com.example.timetogo.MainActivity.nWeek;
 import static com.example.timetogo.MainActivity.num;
-import static com.example.timetogo.MainActivity.result;
-import static com.example.timetogo.MainActivity.socket;
-import static com.example.timetogo.MainActivity.in;
 import static com.example.timetogo.MainActivity.out;
+import static com.example.timetogo.MainActivity.result;
 import static com.example.timetogo.MainActivity.station1;
 import static com.example.timetogo.MainActivity.strweek;
 import static com.example.timetogo.MainActivity.total;
 import static com.example.timetogo.MainActivity.tts;
 
-public class MyWorker extends Worker {
-    public MyWorker(@NonNull Context context, @NonNull WorkerParameters params) {
-        super(context, params);
+public class MyService extends Service {
+    public static final String START_SOCKET = "startsocket";
+    public static final String STOP_SOCKET = "stopsocket";
+    public static Socket socket;
+    public static PrintWriter out;
+    public static BufferedReader in;
+
+    Thread socketThread;
+    Thread alarmThread;
+
+    public MyService() {
+
+    }
+
+    //called when the services starts
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        //action set by setAction() in activity
+        String action = intent.getAction();
+        if (action.equals(START_SOCKET)) {
+            //start your server thread from here
+            this.socketThread = new Thread(new SocketThread());
+            this.socketThread.start();
+            this.alarmThread = new Thread(new AlarmThread());
+            this.alarmThread.start();
+        }
+        if (action.equals(STOP_SOCKET)) {
+            //stop server
+            try {
+                socket.close();
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+        //configures behaviour if service is killed by system, see documentation
+        return START_REDELIVER_INTENT;
     }
 
     @Override
-    public Result doWork() {
-        Thread worker = new Thread() {
-            public void run() {
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    class SocketThread implements Runnable {
+        public void run() {
+            try {
+                socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
+                out = new PrintWriter(socket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(
+                        socket.getInputStream()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    class AlarmThread implements Runnable {
+        public void run() {
+            while (true) {
+                Log.i("alarmThread", "alarmThread");
                 try {
-                    socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
-                    out = new PrintWriter(socket.getOutputStream(), true);
-                    in = new BufferedReader(new InputStreamReader(
-                            socket.getInputStream()));
-                } catch (IOException e) {
+                    final Calendar cal;
+                    cal = Calendar.getInstance();
+                    nWeek = cal.get(Calendar.DAY_OF_WEEK);
+
+                    if (nWeek == 1) {
+                        strweek = "일요일";
+                    }
+                    if (nWeek == 2) {
+                        strweek = "월요일";
+                    }
+                    if (nWeek == 3) {
+                        strweek = "화요일";
+                    }
+                    if (nWeek == 4) {
+                        strweek = "수요일";
+                        alarmTime(17, 55, 1);
+                        alarmTime(17, 56, 2);
+                        alarmTime(17, 57, 3);
+                        alarmTime(17, 58, 4);
+                    }
+                    if (nWeek == 5) {
+                        strweek = "목요일";
+                    }
+                    if (nWeek == 6) {
+                        strweek = "금요일";
+                    }
+                    if (nWeek == 7) {
+                        strweek = "토요일";
+                    }
+                    Thread.sleep(1000); //1초에 한번씩 실행하도록
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-
             }
-        };
-        worker.start();
-
-        (new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        final Calendar cal;
-
-                        cal = Calendar.getInstance();
-                        nWeek = cal.get(Calendar.DAY_OF_WEEK);
-
-                        if (nWeek == 1) {
-                            strweek = "일요일";
-                        }
-                        if (nWeek == 2) {
-                            strweek = "월요일";
-                        }
-                        if (nWeek == 3) {
-                            strweek = "화요일";
-                        }
-                        if (nWeek == 4) {
-                            strweek = "수요일";
-                            alarmTime(16, 45, 1);
-                            alarmTime(16, 46, 2);
-                            alarmTime(16, 47, 3);
-                            alarmTime(16, 48, 4);
-                            alarmTime(16, 49, 5);
-                            alarmTime(16, 50, 6);
-                            alarmTime(16, 51, 7);
-                            alarmTime(16, 52, 8);
-                            alarmTime(16, 53, 9);
-                            alarmTime(16, 54, 10);
-                            alarmTime(16, 55, 11);
-                            alarmTime(16, 56, 12);
-                            alarmTime(16, 57, 13);
-                            alarmTime(16, 58, 14);
-                            alarmTime(16, 59, 15);
-                            alarmTime(17, 0, 16);
-                            alarmTime(17, 1, 17);
-                            alarmTime(17, 2, 18);
-                        }
-                        if (nWeek == 5) {
-                            strweek = "목요일";
-                        }
-                        if (nWeek == 6) {
-                            strweek = "금요일";
-                        }
-                        if (nWeek == 7) {
-                            strweek = "토요일";
-                        }
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        })).start();
-
-        Log.i("doWork", "doWork.... working........");
-        return Result.success();
+        }
     }
 
     public void alarmTime(int hour1,int min1,int alarm){
@@ -146,6 +160,7 @@ public class MyWorker extends Worker {
                 while (num < alarm) {
                     socketdo();
                     //NotificationSomethings();
+                    NotificationSomethings("notificationsomethings");
                     num++;
                 }
             }
@@ -212,7 +227,7 @@ public class MyWorker extends Worker {
                                 //showBusList(bus1, station1);
                                 NotificationSomethings(bus.text);
 
-                                /*Time time = new Time(curLat, curLng);
+                                Time time = new Time(curLat, curLng);
                                 time.determineTime();
                                 items.add(time.text);
 
@@ -253,7 +268,7 @@ public class MyWorker extends Worker {
 
                                 Speech(bus.text + time.text + stepMsg);
                                 //Speech(time.text);
-                                //Speech(stepMsg);*/
+                                //Speech(stepMsg);
                             }
                         });
 

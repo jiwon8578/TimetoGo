@@ -29,6 +29,7 @@
             android:name=".ResultActivity"
             android:parentActivityName=".MainActivity" >
         </activity>
+        <service android:name=".MyService"/>
     </application>
 
 </manifest>

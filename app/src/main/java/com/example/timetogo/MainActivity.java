@@ -29,8 +29,8 @@ import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import java.util.ArrayList;
-import java.util.Locale;
 import android.speech.tts.TextToSpeech;
+import static com.example.timetogo.MyService.tts;
 
 public class MainActivity extends AppCompatActivity {
     static ArrayList<String> items;
@@ -43,8 +43,6 @@ public class MainActivity extends AppCompatActivity {
 
     int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
     FitnessOptions fitnessOptions;
-
-    public static TextToSpeech tts;
 
     public String busText;
     public String timeText;
@@ -61,25 +59,6 @@ public class MainActivity extends AppCompatActivity {
         listViewInit();
         fitAPIInit();
         getNotifData();
-
-        //tts 설정
-        tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status == TextToSpeech.SUCCESS) {
-                    int result = tts.setLanguage(Locale.KOREA);
-                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Toast.makeText(MainActivity.this, "이 언어는 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        tts.setPitch(0.7f);
-                        tts.setSpeechRate(1.2f);
-                        if(busText != null && timeText != null && stepText != null) {
-                            speech(busText+timeText+stepText);
-                        }
-                    }
-                }
-            }
-        });
     }
 
     //구글 Fit API 설정
@@ -116,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
             items.add(busText);
             items.add(timeText);
             items.add(stepText);
+            speech(busText+timeText+stepText);
         }
     }
 
@@ -198,15 +178,6 @@ public class MainActivity extends AppCompatActivity {
                         });
         Intent stepCountService = new Intent(this, StepCount.class);
         startService(stepCountService);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (tts != null) {
-            tts.stop();
-            tts.shutdown();
-        }
     }
 
     //참고한 사이트: https://webnautes.tistory.com/1315

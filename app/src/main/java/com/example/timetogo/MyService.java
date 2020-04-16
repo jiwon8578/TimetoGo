@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import java.io.BufferedReader;
@@ -19,6 +20,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Calendar;
+import java.util.Locale;
 import static com.example.timetogo.StepCount.average;
 import static com.example.timetogo.StepCount.total;
 
@@ -55,6 +57,8 @@ public class MyService extends Service {
 
     public GpsTracker gpsTracker;
 
+    public static TextToSpeech tts;
+
     public MyService() {
     }
 
@@ -78,6 +82,7 @@ public class MyService extends Service {
                 e.printStackTrace();
             }
         }
+        ttsInit();
         return START_REDELIVER_INTENT;
     }
 
@@ -124,12 +129,12 @@ public class MyService extends Service {
                     }
                     if (nWeek == 5) {
                         strweek = "목요일";
-                        alarmTime(18, 30, 0);
-                        alarmTime(18, 31, 0);
-                        alarmTime(18, 32, 0);
-                        alarmTime(18, 33, 0);
-                        alarmTime(18, 34, 0);
-                        alarmTime(18, 35, 0);
+                        alarmTime(18, 51, 0);
+                        alarmTime(18, 52, 0);
+                        alarmTime(18, 53, 0);
+                        alarmTime(18, 54, 0);
+                        alarmTime(18, 55, 0);
+                        alarmTime(18, 56, 0);
                     }
                     if (nWeek == 6) {
                         strweek = "금요일";
@@ -319,5 +324,22 @@ public class MyService extends Service {
         double distance = R * c * 1000; //미터로 변환
         distance = Math.pow(distance, 2);
         return Math.sqrt(distance);
+    }
+
+    //tts 설정
+    private void ttsInit() {
+        tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int result = tts.setLanguage(Locale.KOREA);
+                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    } else {
+                        tts.setPitch(0.7f);
+                        tts.setSpeechRate(1.2f);
+                    }
+                }
+            }
+        });
     }
 }

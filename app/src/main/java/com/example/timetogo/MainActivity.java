@@ -13,7 +13,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.GradientDrawable;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -22,36 +21,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptionsExtension;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
-import com.google.android.gms.fitness.data.DataPoint;
-import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
-import com.google.android.gms.fitness.data.Field;
-import com.google.android.gms.fitness.request.DataReadRequest;
-import com.google.android.gms.fitness.result.DataReadResponse;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
-import java.io.BufferedReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 import android.speech.tts.TextToSpeech;
 
 public class MainActivity extends AppCompatActivity {
@@ -65,8 +43,6 @@ public class MainActivity extends AppCompatActivity {
 
     int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
     FitnessOptions fitnessOptions;
-    public static long total;
-    public static int average;
 
     public static TextToSpeech tts;
 
@@ -136,20 +112,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(),textId,Toast.LENGTH_SHORT).show();
         }
 
-
-        /*AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                Timer t = new Timer();
-                t.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        historyAPI();
-                    }
-                }, 0, 1000);
-            }
-        });*/
-
+        //구글 Fit API 설정
         fitnessOptions = FitnessOptions.builder()
                 .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
                 .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
@@ -164,30 +127,18 @@ public class MainActivity extends AppCompatActivity {
             subscribe();
         }
 
-        /*Timer t = new Timer();
-        t.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                readData();
-            }
-        }, 0, 1000);*/
-
+        //tts 초기 설정
         tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
-                    //사용할 언어를 설정
                     int result = tts.setLanguage(Locale.KOREA);
-                    //언어 데이터가 없거나 혹은 언어가 지원하지 않으면...
                     if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                         Toast.makeText(MainActivity.this, "이 언어는 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
                     } else {
-                        //음성 톤
                         tts.setPitch(0.7f);
-                        //읽는 속도
                         tts.setSpeechRate(1.2f);
                     }
-                    Log.i("tts", "tts init");
                 }
             }
         });
@@ -201,90 +152,7 @@ public class MainActivity extends AppCompatActivity {
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
     }
 
-    public void historyAPI() {
-        // get the start and end date of the urrent mobile
-        Calendar cal = Calendar.getInstance();
-        Date now = new Date();
-        cal.setTime(now);
-        long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.DAY_OF_YEAR, -1); //어제 데이터
-        long startTime = cal.getTimeInMillis();
-        //Log.i("starttime", startTime+"");
-        //Log.i("endtime", endTime+"");
-
-        GoogleSignInOptionsExtension fitnessOptions =
-                FitnessOptions.builder()
-                        .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-                        .build();
-
-        GoogleSignInAccount googleSignInAccount =
-                GoogleSignIn.getAccountForExtension(this, fitnessOptions);
-
-        Task<DataReadResponse> response = Fitness.getHistoryClient(this, googleSignInAccount)
-                .readData(new DataReadRequest.Builder()
-                        .read(DataType.TYPE_STEP_COUNT_DELTA)
-                        .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                        .build());
-
-        try {
-            //code that throws the exception
-            DataReadResponse readDataResult = Tasks.await(response);
-            DataSet dataSet = readDataResult.getDataSet(DataType.TYPE_STEP_COUNT_DELTA);
-            showDataSet(dataSet);
-        } catch (Exception e) {
-            //what to do when it throws the exception
-            Log.i("History", "Not working");
-        }
-
-    }
-
-    private void showDataSet(DataSet dataSet) {
-        Log.i("History", "Data returned for Data type: " + dataSet.getDataType().getName());
-        DateFormat dateFormat = DateFormat.getDateInstance();
-        DateFormat timeFormat = DateFormat.getTimeInstance();
-        SimpleDateFormat format = new SimpleDateFormat("HH");
-
-        int totalsteps = 0;
-        int num = 0;
-        average = 0;
-
-        for (DataPoint dp : dataSet.getDataPoints()) {
-            //Log.i("History", "Data point:");
-            //Log.i("History", "\tType: " + dp.getDataType().getName());
-            //Log.i("History", "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-            //Log.i("History", "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-            for(Field field : dp.getDataType().getFields()) {
-                //Log.i("History", "\tField: " + field.getName() + " Value: " + dp.getValue(field));
-                totalsteps += dp.getValue(field).asInt();
-
-                String hour = format.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-
-                Calendar cal = Calendar.getInstance();
-                Date now = new Date();
-                cal.setTime(now);
-                long curTime = cal.getTimeInMillis();
-
-                String curHour = format.format(curTime);
-
-                //Log.i("History", "Hour:"+hour);
-                //Log.i("History", "curHour:"+curHour);
-
-                num++;
-                average = totalsteps / num;
-                if(Integer.valueOf(hour) >= Integer.valueOf(curHour)) {
-                    break;
-                }
-            }
-        }
-        Log.i("History", "Totalsteps:"+totalsteps);
-        Log.i("History", "Num:"+num);
-        Log.i("History", "Average:"+average);
-    }
-
-    /** Records step data by requesting a subscription to background step data. */
     public void subscribe() {
-        // To create a subscription, invoke the Recording API. As soon as the subscription is
-        // active, fitness data will start recording.
         Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .subscribe(DataType.TYPE_STEP_COUNT_CUMULATIVE)
                 .addOnCompleteListener(
@@ -292,38 +160,14 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
                                 if (task.isSuccessful()) {
-                                    Log.i("Stepcount", "Successfully subscribed!");
+                                    Log.i("Subscribe", "Successfully subscribed!");
                                 } else {
-                                    Log.w("Stepcount", "There was a problem subscribing.", task.getException());
+                                    Log.w("Subscribe", "There was a problem subscribing.", task.getException());
                                 }
                             }
                         });
-        Intent startSocket = new Intent(this, StepCount.class);
-        startService(startSocket);
-    }
-
-    /**
-     * Reads the current daily step total, computed from midnight of the current day on the device's
-     * current timezone.
-     */
-    private void readData() {
-        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
-                .addOnSuccessListener(
-                        new OnSuccessListener<DataSet>() {
-                            @Override
-                            public void onSuccess(DataSet dataSet) {
-                                total = dataSet.isEmpty() ? 0 : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
-                                Log.i("Stepcount", "Total steps: " + total);
-                            }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.w("Stepcount", "There was a problem getting the step count.", e);
-                            }
-                        });
+        Intent stepCountService = new Intent(this, StepCount.class);
+        startService(stepCountService);
     }
 
     @Override

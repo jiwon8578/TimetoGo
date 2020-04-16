@@ -97,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
     public static int nWeek;
     public static int hour;
     public static int min;
+    public static int sec;
     public static String strweek = null;
     public static String data;
 
@@ -136,10 +137,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         StrictMode.enableDefaults();
 
-
-        /*Constraints constraints = new Constraints.Builder().setRequiresCharging(true).build();
-        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(MyWorker.class, 15, TimeUnit.MINUTES).setConstraints(constraints).build();
-        WorkManager.getInstance(getApplicationContext()).enqueue(request);*/
         Intent startSocket = new Intent(this, MyService.class);
         startSocket.setAction(MyService.START_SOCKET);
         startService(startSocket);
@@ -155,12 +152,7 @@ public class MainActivity extends AppCompatActivity {
         curLat = gpsTracker.getLatitude();
         curLng = gpsTracker.getLongitude();
 
-        //Toast.makeText(getApplicationContext(),Double.toString(curLat),Toast.LENGTH_SHORT).show();
-        //Toast.makeText(getApplicationContext(),Double.toString(curLng),Toast.LENGTH_SHORT).show();
-
         items = new ArrayList<String>();
-        // items.add("test");
-        // adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, items);
         adapter = new ArrayAdapter<String>(MainActivity.this, R.layout.my_list_item, items) {
             @NonNull
             @Override
@@ -196,6 +188,17 @@ public class MainActivity extends AppCompatActivity {
 
         listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
+
+        String textId = null;
+
+        Bundle extras = getIntent().getExtras();
+        if (extras == null) {
+            textId = "";
+        }
+        else {
+            textId = extras.getString("notificationId");
+            Toast.makeText(getApplicationContext(),textId,Toast.LENGTH_SHORT).show();
+        }
 
         //OneTimeWorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(MyWorker.class).build();
         //WorkManager.getInstance(getApplicationContext()).enqueue(uploadWorkRequest);

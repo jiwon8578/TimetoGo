@@ -30,7 +30,7 @@ public class Bus {
     public String lng1 = "";
     public String lng2 = "";
 
-    public void showBusList(String bus, String station, String destStn) {
+    public String showBusList(String bus, String station, String destStn) {
         busRouteList = new ArrayList<String>();
         stationList = new ArrayList<String>();
         stationNmList = new ArrayList<String>();
@@ -52,8 +52,10 @@ public class Bus {
 
         getTravelTime(station,destStn);
 
-        MainActivity.items.add(text);
-        MainActivity.adapter.notifyDataSetChanged();
+        //MainActivity.items.add(text);
+        //MainActivity.adapter.notifyDataSetChanged();
+
+        return text;
     }
 
     public void getTravelTime(String station, String destStn) {

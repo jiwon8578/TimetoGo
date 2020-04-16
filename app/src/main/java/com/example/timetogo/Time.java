@@ -22,7 +22,7 @@ public class Time extends AppCompatActivity {
         this.curLng = curLng;
     }
 
-    public void determineTime() {
+    public String determineTime() {
         Weather weather = new Weather();
         weather.getWeatherAPI(this.curLat, this.curLng);
         weather.categorize();
@@ -67,5 +67,7 @@ public class Time extends AppCompatActivity {
                     "교통상황: 정체\n" +
                     "날씨와 교통상황으로 인해 많이 밀릴 수 있으니 세번째 버스를 사용해주세요.";
         }
+
+        return text;
     }
 }

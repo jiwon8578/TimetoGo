@@ -8,7 +8,7 @@ public class Traffic extends AppCompatActivity {
     public boolean yellow = false;
     public boolean red = false;
 
-    //교통상황 카테고리로 나누기 
+    //교통상황 카테고리로 나누기
     public void categorize() {
         speed = Bus.averageSpd;
 

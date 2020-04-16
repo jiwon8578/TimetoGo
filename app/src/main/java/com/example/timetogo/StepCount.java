@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.IBinder;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -22,7 +21,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -39,6 +37,7 @@ public class StepCount extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        //현재 걸음 수
         Timer t = new Timer();
         t.schedule(new TimerTask() {
             @Override
@@ -47,6 +46,7 @@ public class StepCount extends Service {
             }
         }, 0, 1000);
 
+        //과거 걸음 수
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -68,6 +68,7 @@ public class StepCount extends Service {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    //과거 걸음 수 가져오기
     public void historyAPI() {
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
@@ -94,10 +95,8 @@ public class StepCount extends Service {
         }
     }
 
+    //평균 걸음 수 계산
     private void showDataSet(DataSet dataSet) {
-        Log.i("History", "Data returned for Data type: " + dataSet.getDataType().getName());
-        DateFormat dateFormat = DateFormat.getDateInstance();
-        DateFormat timeFormat = DateFormat.getTimeInstance();
         SimpleDateFormat format = new SimpleDateFormat("HH");
 
         int totalsteps = 0;
@@ -120,11 +119,9 @@ public class StepCount extends Service {
                 }
             }
         }
-        Log.i("History", "Totalsteps:"+totalsteps);
-        Log.i("History", "Num:"+num);
-        Log.i("History", "Average:"+average);
     }
 
+    //현재 걸음 수 가져오기
     private void readData() {
         Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(getApplicationContext()))
                 .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
@@ -133,14 +130,13 @@ public class StepCount extends Service {
                             @Override
                             public void onSuccess(DataSet dataSet) {
                                 total = dataSet.isEmpty() ? 0 : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
-                                Log.i("Stepcount", "Total steps: " + total);
                             }
                         })
                 .addOnFailureListener(
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                Log.w("Stepcount", "There was a problem getting the step count.", e);
+                                e.printStackTrace();
                             }
                         });
     }

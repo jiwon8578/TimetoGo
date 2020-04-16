@@ -124,12 +124,12 @@ public class MyService extends Service {
                     }
                     if (nWeek == 5) {
                         strweek = "목요일";
-                        alarmTime(18, 6, 0);
-                        alarmTime(18, 7, 0);
-                        alarmTime(18, 8, 0);
-                        alarmTime(18, 9, 0);
-                        alarmTime(18, 10, 0);
-                        alarmTime(18, 11, 0);
+                        alarmTime(18, 30, 0);
+                        alarmTime(18, 31, 0);
+                        alarmTime(18, 32, 0);
+                        alarmTime(18, 33, 0);
+                        alarmTime(18, 34, 0);
+                        alarmTime(18, 35, 0);
                     }
                     if (nWeek == 6) {
                         strweek = "금요일";

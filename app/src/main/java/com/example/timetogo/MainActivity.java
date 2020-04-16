@@ -46,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
 
     public static TextToSpeech tts;
 
+    public String busText;
+    public String timeText;
+    public String stepText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,12 +60,9 @@ public class MainActivity extends AppCompatActivity {
         startBackgroundService();
         listViewInit();
         fitAPIInit();
-        ttsInit();
         getNotifData();
-    }
 
-    //tts 초기 설정
-    private void ttsInit() {
+        //tts 설정
         tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         tts.setPitch(0.7f);
                         tts.setSpeechRate(1.2f);
+                        speech(busText+timeText+stepText);
                     }
                 }
             }
@@ -106,15 +108,12 @@ public class MainActivity extends AppCompatActivity {
             textId = extras.getString("notificationId");
             String[] data_split;
             data_split = textId.split("@");
-            String busText = data_split[0];
-            String timeText = data_split[1];
-            String stepText = data_split[2];
+            busText = data_split[0];
+            timeText = data_split[1];
+            stepText = data_split[2];
             items.add(busText);
             items.add(timeText);
             items.add(stepText);
-
-            speech(busText+timeText+stepText);
-            speech("Hi");
         }
     }
 

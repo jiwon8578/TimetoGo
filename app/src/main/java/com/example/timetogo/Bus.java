@@ -1,14 +1,11 @@
 package com.example.timetogo;
 
-import android.util.Log;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import java.net.URL;
 import java.util.ArrayList;
 
 public class Bus {
-
     public ArrayList<String> busRouteList; //노선Id들의 리스트
     public ArrayList<String> stationList; //정류소Id들의 리스트
     public ArrayList<String> stationNmList; //정류소 이름들의 리스트
@@ -51,13 +48,10 @@ public class Bus {
         }
 
         getTravelTime(station,destStn);
-
-        //MainActivity.items.add(text);
-        //MainActivity.adapter.notifyDataSetChanged();
-
         return text;
     }
 
+    //버스 속도 알아내는 함수
     public void getTravelTime(String station, String destStn) {
         boolean isStart = false;
         String time = null;
@@ -75,13 +69,8 @@ public class Bus {
             if(isStart) {
                 time = travelTimeList.get(i);
                 intTime = Integer.parseInt(time);
-
                 totalTime += intTime;
                 count++;
-
-                Log.e("Time", time);
-                Log.e("Count", String.valueOf(count));
-                Log.e("Station", stationNmList.get(i));
             }
             if(stationNoList.get(i).equals(destStn)) {
                 isStart = false;
@@ -93,28 +82,20 @@ public class Bus {
         if(count != 0) {
             averageSpd = totalTime / count;
         }
-
-        Log.i("lat1", lat1);
-        Log.i("lat2", lat2);
-        Log.i("lng1", lng1);
-        Log.i("lng2", lng2);
     }
 
-    public void getBusAPI(String stId, String busRouteId, String ord) { //getLowArrInfoByStIdList
-
+    //getLowArrInfoByStIdList
+    public void getBusAPI(String stId, String busRouteId, String ord) {
         boolean in_rtNm = false, in_arrmsg1 = false, in_arrmsg2 = false;
-
         String rtNm = null, arrmsg1 = null, arrmsg2 = null;
 
         try {
             URL url = new URL("http://ws.bus.go.kr/api/rest/arrive/getLowArrInfoByRoute?serviceKey=4Sc5MPbhBeWyQLVQ1JM9AqGWarV75Qk9hG%2FLuWVNl7%2B4hyHn8nP0mGrsxqDJHcgRdrSYT7sjblUpHpqjDcXdbw%3D%3D&stId=" + stId + "&busRouteId=" + busRouteId + "&ord=" + ord);
             XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
             XmlPullParser parser = parserCreator.newPullParser();
-
             parser.setInput(url.openStream(), null);
 
             int parserEvent = parser.getEventType();
-            System.out.println("파싱 시작합니다");
 
             while(parserEvent != XmlPullParser.END_DOCUMENT) {
                 switch(parserEvent) {
@@ -151,27 +132,23 @@ public class Bus {
                 }
                 parserEvent = parser.next();
             }
-
         } catch(Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void getStationsByRouteList(String busRouteId) { //busRouteId를 넣으면 stationId를 리턴한다.
-
+    //busRouteId를 넣으면 stationId를 리턴한다.
+    public void getStationsByRouteList(String busRouteId) {
         boolean in_station = false, in_stationNm = false, in_stationNo = false, in_seq = false, in_sectSpd = false, in_gpsX = false, in_gpsY = false;
-
         String station = null, stationNm = null, stationNo = null, seq = null, sectSpd = null, gpsX = null, gpsY = null;
 
         try {
             URL url = new URL("http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute?serviceKey=4Sc5MPbhBeWyQLVQ1JM9AqGWarV75Qk9hG%2FLuWVNl7%2B4hyHn8nP0mGrsxqDJHcgRdrSYT7sjblUpHpqjDcXdbw%3D%3D&busRouteId="+busRouteId);
             XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
             XmlPullParser parser = parserCreator.newPullParser();
-
             parser.setInput(url.openStream(), null);
 
             int parserEvent = parser.getEventType();
-            System.out.println("파싱 시작합니다");
 
             while(parserEvent != XmlPullParser.END_DOCUMENT) {
                 switch(parserEvent) {
@@ -242,27 +219,23 @@ public class Bus {
                 }
                 parserEvent = parser.next();
             }
-
         } catch(Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void getBusRouteList(String busRouteNm) { //버스 번호를 입력하면 busRouteId를 리턴한다
-
+    //버스 번호를 입력하면 busRouteId를 리턴한다
+    public void getBusRouteList(String busRouteNm) {
         boolean in_busRouteId = false;
-
         String busRouteId = null;
 
         try {
             URL url = new URL("http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList?serviceKey=4Sc5MPbhBeWyQLVQ1JM9AqGWarV75Qk9hG%2FLuWVNl7%2B4hyHn8nP0mGrsxqDJHcgRdrSYT7sjblUpHpqjDcXdbw%3D%3D&strSrch="+busRouteNm);
             XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
             XmlPullParser parser = parserCreator.newPullParser();
-
             parser.setInput(url.openStream(), null);
 
             int parserEvent = parser.getEventType();
-            System.out.println("파싱 시작합니다");
 
             while(parserEvent != XmlPullParser.END_DOCUMENT) {
                 switch(parserEvent) {
@@ -287,7 +260,6 @@ public class Bus {
                 }
                 parserEvent = parser.next();
             }
-
         } catch(Exception e) {
             e.printStackTrace();
         }

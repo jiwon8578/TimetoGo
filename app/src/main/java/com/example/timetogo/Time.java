@@ -3,7 +3,6 @@ package com.example.timetogo;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class Time extends AppCompatActivity {
-
     double curLat;
     double curLng;
 
@@ -14,7 +13,6 @@ public class Time extends AppCompatActivity {
     boolean red;
 
     public int early = 0;
-
     public String text = "";
 
     public Time(double curLat, double curLng) {
@@ -22,6 +20,7 @@ public class Time extends AppCompatActivity {
         this.curLng = curLng;
     }
 
+    //날씨와 교통상황에 따라 출발 시간 결정하는 함수
     public String determineTime() {
         Weather weather = new Weather();
         weather.getWeatherAPI(this.curLat, this.curLng);
@@ -67,7 +66,6 @@ public class Time extends AppCompatActivity {
                     "교통상황: 정체\n" +
                     "날씨와 교통상황으로 인해 많이 밀릴 수 있으니 세번째 버스를 사용해주세요.";
         }
-
         return text;
     }
 }

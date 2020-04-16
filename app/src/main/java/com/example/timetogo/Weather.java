@@ -6,12 +6,12 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.net.URL;
 
 public class Weather extends AppCompatActivity {
-
     public String weatherNumber = null;
     public int intNumber = 0;
     public boolean rainSnow = false;
     public boolean sunny = false;
 
+    //API 받아오기
     public void getWeatherAPI(double curLat, double curLng) {
         try {
             URL url = new URL("http://api.openweathermap.org/data/2.5/weather?lat="+curLat+"&lon="+curLng+"&appid=214ca5ff55f7bc7e5e085dafb21c0789&mode=xml&lang=kr&units=metric");
@@ -38,6 +38,7 @@ public class Weather extends AppCompatActivity {
         }
     }
 
+    //날씨 카테고리로 나누기
     public void categorize() {
         intNumber = Integer.parseInt(weatherNumber);
         if (intNumber < 300) { //thunderstorm

@@ -123,8 +123,8 @@ public class GpsTracker extends Service implements LocationListener {
     {
         if(location != null)
         {
-            MainActivity.curLat = location.getLatitude();
-            MainActivity.curLng = location.getLongitude();
+            MyService.curLat = location.getLatitude();
+            MyService.curLng = location.getLongitude();
         }
 
     }

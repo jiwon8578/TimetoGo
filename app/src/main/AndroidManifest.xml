@@ -24,5 +24,6 @@
             </intent-filter>
         </activity>
         <service android:name=".MyService"/>
+        <service android:name=".StepCount"/>
     </application>
 </manifest>

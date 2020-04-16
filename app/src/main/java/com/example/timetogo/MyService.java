@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,22 +19,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Calendar;
-import static com.example.timetogo.MainActivity.NOTIFICATION_CHANNEL_ID;
-import static com.example.timetogo.MainActivity.average;
-import static com.example.timetogo.MainActivity.bus;
-import static com.example.timetogo.MainActivity.bus1;
-import static com.example.timetogo.MainActivity.curLat;
-import static com.example.timetogo.MainActivity.curLng;
-import static com.example.timetogo.MainActivity.data;
-import static com.example.timetogo.MainActivity.data_split;
-import static com.example.timetogo.MainActivity.destStn;
-import static com.example.timetogo.MainActivity.hour;
-import static com.example.timetogo.MainActivity.sec;
-import static com.example.timetogo.MainActivity.min;
-import static com.example.timetogo.MainActivity.nWeek;
-import static com.example.timetogo.MainActivity.station1;
-import static com.example.timetogo.MainActivity.strweek;
-import static com.example.timetogo.MainActivity.total;
+import static com.example.timetogo.StepCount.average;
+import static com.example.timetogo.StepCount.total;
 
 public class MyService extends Service {
     public static final String START_SOCKET = "startsocket";
@@ -45,15 +32,38 @@ public class MyService extends Service {
     Thread socketThread;
     Thread alarmThread;
 
+    public final String NOTIFICATION_CHANNEL_ID = "10001";
+    public int nWeek;
+    public int hour;
+    public int min;
+    public int sec;
+    public String strweek = null;
+    public String data;
+
+    public String[] data_split;
+    public String bus1;
+    public String station1;
+    public String destStn;
+
+    public static double curLat;
+    public static double curLng;
+
+    public Bus bus = new Bus();
     public String busText;
     public String timeText;
     public String stepMsg;
+
+    public GpsTracker gpsTracker;
 
     public MyService() {
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        gpsTracker = new GpsTracker(getApplicationContext());
+        curLat = gpsTracker.getLatitude();
+        curLng = gpsTracker.getLongitude();
+
         String action = intent.getAction();
         if (action.equals(START_SOCKET)) {
             this.socketThread = new Thread(new SocketThread());
@@ -114,12 +124,12 @@ public class MyService extends Service {
                     }
                     if (nWeek == 5) {
                         strweek = "목요일";
-                        alarmTime(15, 3, 59);
-                        alarmTime(15, 4, 0);
-                        alarmTime(15, 5, 0);
-                        alarmTime(15, 6, 0);
-                        alarmTime(15, 7, 0);
-                        alarmTime(15, 8, 0);
+                        alarmTime(16, 23, 50);
+                        alarmTime(16, 24, 0);
+                        alarmTime(16, 25, 0);
+                        alarmTime(16, 26, 0);
+                        alarmTime(16, 7, 0);
+                        alarmTime(16, 8, 0);
                     }
                     if (nWeek == 6) {
                         strweek = "금요일";
@@ -192,6 +202,10 @@ public class MyService extends Service {
                     public void run() {
                         busText = bus.showBusList(bus1, station1, destStn); //버스 도착정보 메시지
 
+                        curLat = gpsTracker.getLatitude();
+                        curLng = gpsTracker.getLongitude();
+                        Log.i("curLat", curLat+"");
+                        Log.i("curLng", curLng+"");
                         Time time = new Time(curLat, curLng);
                         timeText = time.determineTime(); //몇번째 전 버스를 사용해야 하는지(날씨, 교통상황)
 

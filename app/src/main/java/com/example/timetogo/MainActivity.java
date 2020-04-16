@@ -5,25 +5,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
-import androidx.work.Constraints;
-import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
-
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
 import android.location.LocationManager;
 import android.os.AsyncTask;
@@ -37,77 +24,37 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptionsExtension;
-import com.google.android.gms.common.Scopes;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Response;
-import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
-import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResponse;
-import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import android.speech.tts.TextToSpeech;
-import android.os.Build;
-
-//흐름: 버스 번호를 입력 -> 해당 버스에 대한 노선 id가 나옴 -> 해당 노선에 대한 정류장들에 대한 정류장 정보가 나온다(정류장 id, 정류장 이름, 정류장 번호) -> 정류장 id, 노선 id, 순번을 입력하여 해당 정류장에 도착하는 특정 버스들에 대한 정보를 받아볼 수 있다.
-//busRouteNm이 버스 번호, busRouteId가 노선Id, station이 정류소Id
 
 public class MainActivity extends AppCompatActivity {
-    static int num = 0;
-    public static final String NOTIFICATION_CHANNEL_ID = "10001";
-    public static int count = 0;
-    public static Socket socket;
-    public static BufferedReader in;
-    public static PrintWriter out;
-    public static int nWeek;
-    public static int hour;
-    public static int min;
-    public static int sec;
-    public static String strweek = null;
-    public static String data;
-
-    public static TextView result;
-
-    public static String[] data_split;
-    public static String bus1;
-    public static String station1;
-    public static String destStn;
-
     static ArrayList<String> items;
     static ArrayAdapter<String> adapter;
     static ListView listView;
@@ -116,17 +63,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CODE = 100;
     String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
-    static double curLat;
-    static double curLng;
-
-    public static Bus bus = new Bus();
-
     int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
-
     FitnessOptions fitnessOptions;
-
     public static long total;
-
     public static int average;
 
     public static TextToSpeech tts;
@@ -137,10 +76,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         StrictMode.enableDefaults();
 
-        Intent startSocket = new Intent(this, MyService.class);
-        startSocket.setAction(MyService.START_SOCKET);
-        startService(startSocket);
-
         //위치 퍼미션
         if (!checkLocationServicesStatus()) {
             showDialogForLocationServiceSetting();
@@ -148,10 +83,12 @@ public class MainActivity extends AppCompatActivity {
             checkRunTimePermission();
         }
 
-        GpsTracker gpsTracker = new GpsTracker(MainActivity.this);
-        curLat = gpsTracker.getLatitude();
-        curLng = gpsTracker.getLongitude();
+        //백그라운드 서비스
+        Intent startSocket = new Intent(this, MyService.class);
+        startSocket.setAction(MyService.START_SOCKET);
+        startService(startSocket);
 
+        //리스트뷰 설정
         items = new ArrayList<String>();
         adapter = new ArrayAdapter<String>(MainActivity.this, R.layout.my_list_item, items) {
             @NonNull
@@ -185,12 +122,11 @@ public class MainActivity extends AppCompatActivity {
                 return view;
             }
         };
-
         listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
 
+        //노티피케이션에서 받아온 데이터
         String textId = null;
-
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
             textId = "";
@@ -201,110 +137,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        /*Thread worker = new Thread() {
-            public void run() {
-                try {
-                    socket = new Socket("ec2-13-209-36-232.ap-northeast-2.compute.amazonaws.com", 7777);
-                    out = new PrintWriter(socket.getOutputStream(), true);
-                    in = new BufferedReader(new InputStreamReader(
-                            socket.getInputStream()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        };
-        worker.start();*/
-
-        //Time time = new Time(curLat, curLng);
-        //time.determineTime();
-        //Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
-
-        result = (TextView) findViewById(R.id.result);
-
-        /*(new Thread(new Runnable() {
-
-
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        final Calendar cal;
-
-                        cal = Calendar.getInstance();
-                        hour = cal.get(Calendar.HOUR_OF_DAY);
-                        min = cal.get(Calendar.MINUTE);
-                        nWeek = cal.get(Calendar.DAY_OF_WEEK);
-
-                        long time = System.currentTimeMillis();
-
-                        if (nWeek == 1) {
-                            strweek = "일요일";
-                        }
-                        if (nWeek == 2) {
-                            strweek = "월요일";
-                            alarmTime(23, 57, 1);
-                            alarmTime(23, 58, 2);
-                        }
-                        if (nWeek == 3) {
-                            strweek = "화요일";
-                            alarmTime(23, 56, 1);
-                            alarmTime(23, 57, 2);
-                            alarmTime(22, 13, 3);
-                            alarmTime(22, 14, 4);
-                            alarmTime(22, 6, 5);
-                            alarmTime(22, 7, 6);
-                        }
-                        if (nWeek == 4) {
-                            strweek = "수요일";
-                            alarmTime(21, 0, 1);
-                            alarmTime(21, 19, 2);
-                            alarmTime(21, 20, 3);
-                            alarmTime(21, 21, 4);
-                            alarmTime(21, 22, 5);
-                            alarmTime(21, 23, 6);
-
-                        }
-                        if (nWeek == 5) {
-                            strweek = "목요일";
-                            alarmTime(23, 56, 1);
-                            alarmTime(23, 57, 2);
-                            alarmTime(23, 58, 3);
-                            alarmTime(23, 47, 4);
-                            alarmTime(23, 48, 5);
-                            alarmTime(22, 7, 6);
-                            alarmTime(22, 8, 7);
-                        }
-                        if (nWeek == 6) {
-                            strweek = "금요일";
-                            alarmTime(14, 36, 1);
-                            alarmTime(14, 37, 2);
-                            alarmTime(14, 38, 3);
-                            alarmTime(14, 23, 4);
-                            alarmTime(14, 16, 5);
-                            alarmTime(14, 17, 6);
-                        }
-                        if (nWeek == 7) {
-                            strweek = "토요일";
-                            alarmTime(17, 51, 1);
-                            alarmTime(17, 52, 2);
-                            alarmTime(17, 53, 3);
-                            alarmTime(17, 54, 4);
-                            alarmTime(17, 55, 5);
-                        }
-                        Thread.sleep(1000);
-
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        })).start();*/
-
-        //socketdo();
-        AsyncTask.execute(new Runnable() {
+        /*AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
                 Timer t = new Timer();
@@ -314,10 +147,8 @@ public class MainActivity extends AppCompatActivity {
                         historyAPI();
                     }
                 }, 0, 1000);
-                //historyAPI();
             }
-        });
-
+        });*/
 
         fitnessOptions = FitnessOptions.builder()
                 .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
@@ -332,27 +163,14 @@ public class MainActivity extends AppCompatActivity {
         } else {
             subscribe();
         }
-        /*GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(this, fitnessOptions);
-        if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
-            GoogleSignIn.requestPermissions(
-                    this, // your activity
-                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, // e.g. 1
-                    account,
-                    fitnessOptions);
-        } else {
-            subscribe();
-        }*/
-        //readData();
 
-
-
-        Timer t = new Timer();
+        /*Timer t = new Timer();
         t.schedule(new TimerTask() {
             @Override
             public void run() {
                 readData();
             }
-        }, 0, 1000);
+        }, 0, 1000);*/
 
         tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -373,7 +191,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
     }
 
     private void Speech(String text) {
@@ -384,23 +201,7 @@ public class MainActivity extends AppCompatActivity {
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
     }
 
-    public static double distance(double lat1, double lat2, double lon1, double lon2) {
-        final int R = 6371; // Radius of the earth
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = R * c * 1000; // convert to meters
-
-        distance = Math.pow(distance, 2);
-
-        return Math.sqrt(distance);
-    }
-
     public void historyAPI() {
-
         // get the start and end date of the urrent mobile
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
@@ -497,6 +298,8 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         });
+        Intent startSocket = new Intent(this, StepCount.class);
+        startService(startSocket);
     }
 
     /**
@@ -523,151 +326,9 @@ public class MainActivity extends AppCompatActivity {
                         });
     }
 
-    public void alarmTime(int hour1,int min1,int alarm){
-
-        //final Calendar cal;
-        //cal = Calendar.getInstance();
-
-        final Calendar cal;
-
-        cal = Calendar.getInstance();
-        hour = cal.get(Calendar.HOUR_OF_DAY);
-        min = cal.get(Calendar.MINUTE);
-        nWeek = cal.get(Calendar.DAY_OF_WEEK);
-
-        if(hour==hour1){
-            if(min==min1) {
-                while (num < alarm) {
-                    socketdo();
-                    //NotificationSomethings();
-                    num++;
-                }
-            }
-        }
-
-    }
-
-    public void socketdo(){
-
-        Thread worker = new Thread() {
-            public void run() {
-                try {
-                    final Calendar cal;
-
-                    cal = Calendar.getInstance();
-                    String send = "";
-                    hour = cal.get(Calendar.HOUR_OF_DAY);
-                    min = cal.get(Calendar.MINUTE);
-                    nWeek = cal.get(Calendar.DAY_OF_WEEK);
-                    send = nWeek + "," + hour + "," + min + "\n";
-
-                    out.print(send);
-                    out.flush();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                while (true) {
-                    //readData();
-
-                    try {
-                        data = in.readLine();
-                        count++;
-
-                         result.post(new Runnable() {
-
-                            @Override
-                             public void run() {
-                                //readData();
-
-                                data = data.replace("[", "");
-                                data = data.replace("'", "");
-                                data = data.replace(" ", "");
-                                data = data.replace("]", "");
-                                Log.d(data,data);
-
-                                data_split = data.split(",");
-                                bus1 = data_split[1];
-                                if(data_split[0].contains("-")) {
-                                    String[] temp = data_split[0].split("-");
-                                    station1 = temp[0] + temp[1];
-                                } else {
-                                    station1 = data_split[0];
-                                }
-
-                                if(data_split[2].contains("-")) {
-                                    String[] temp = data_split[2].split("-");
-                                    destStn = temp[0] + temp[1];
-                                } else {
-                                    destStn = data_split[2];
-                                }
-
-                                bus.showBusList(bus1, station1, destStn);
-                                //showBusList(bus1, station1);
-                                NotificationSomethings(bus.text);
-
-                                Time time = new Time(curLat, curLng);
-                                time.determineTime();
-                                items.add(time.text);
-
-                                double lat1 = Double.parseDouble(bus.lat1);
-                                double lat2 = Double.parseDouble(bus.lat2);
-                                double lng1 = Double.parseDouble(bus.lng1);
-                                double lng2 = Double.parseDouble(bus.lng2);
-
-                                double distance = distance(lat1, lat2, lng1, lng2);
-                                Log.i("distance", distance+"");
-
-                                String stepMsg = "";
-                                if(distance <= 3000) {
-                                    if(total > average) {
-                                        stepMsg = "이동 거리가 3km 이하입니다.\n" +
-                                                "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
-                                                "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                                "평소보다 많이 걸으셨으니 대중교통을 이용하셔도 좋습니다.";
-                                    } else {
-                                        stepMsg = "이동 거리가 3km 이하입니다.\n" +
-                                                "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
-                                                "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                                "평소보다 걸음수가 적습니다. 목적지까지 도보로 이동하시는 것은 어떠신가요?";
-                                    }
-                                } else {
-                                    stepMsg = "이동 거리가 3km 이상입니다.\n" +
-                                            "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
-                                            "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                            "목적지까지 대중교통을 이용해주세요.";
-                                }
-                                items.add(stepMsg);
-
-                                //readData();
-
-                                //NotificationSomethings(Integer.toString(time.early));
-                                // Toast.makeText(getApplicationContext(),Integer.toString(bus.averageSpd),Toast.LENGTH_SHORT).show();
-                                // Toast.makeText(getApplicationContext(),Integer.toString(time.early),Toast.LENGTH_SHORT).show();
-
-                                Speech(bus.text + time.text + stepMsg);
-                                //Speech(time.text);
-                                //Speech(stepMsg);
-                            }
-                         });
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        worker.start();
-    }
-
     @Override
     protected void onStop() {
         super.onStop();
-        /*try {
-            socket.close();
-        } catch(IOException e) {
-            e.printStackTrace();
-        }*/
         if (tts != null) {
             tts.stop();
             tts.shutdown();
@@ -745,7 +406,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         switch (requestCode) {
             case GPS_ENABLE_REQUEST_CODE:
                 if (checkLocationServicesStatus()) {

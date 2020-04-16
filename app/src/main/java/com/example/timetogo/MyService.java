@@ -11,8 +11,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.speech.tts.TextToSpeech;
-import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,7 +22,6 @@ import static com.example.timetogo.MainActivity.NOTIFICATION_CHANNEL_ID;
 import static com.example.timetogo.MainActivity.average;
 import static com.example.timetogo.MainActivity.bus;
 import static com.example.timetogo.MainActivity.bus1;
-import static com.example.timetogo.MainActivity.count;
 import static com.example.timetogo.MainActivity.curLat;
 import static com.example.timetogo.MainActivity.curLng;
 import static com.example.timetogo.MainActivity.data;
@@ -37,7 +34,6 @@ import static com.example.timetogo.MainActivity.nWeek;
 import static com.example.timetogo.MainActivity.station1;
 import static com.example.timetogo.MainActivity.strweek;
 import static com.example.timetogo.MainActivity.total;
-import static com.example.timetogo.MainActivity.tts;
 
 public class MyService extends Service {
     public static final String START_SOCKET = "startsocket";
@@ -118,12 +114,12 @@ public class MyService extends Service {
                     }
                     if (nWeek == 5) {
                         strweek = "목요일";
-                        alarmTime(13, 17, 59);
-                        alarmTime(13, 18, 0);
-                        alarmTime(13, 19, 0);
-                        alarmTime(13, 20, 0);
-                        alarmTime(13, 21, 0);
-                        alarmTime(13, 22, 0);
+                        alarmTime(15, 3, 59);
+                        alarmTime(15, 4, 0);
+                        alarmTime(15, 5, 0);
+                        alarmTime(15, 6, 0);
+                        alarmTime(15, 7, 0);
+                        alarmTime(15, 8, 0);
                     }
                     if (nWeek == 6) {
                         strweek = "금요일";
@@ -148,7 +144,7 @@ public class MyService extends Service {
         sec = cal.get(Calendar.SECOND);
         nWeek = cal.get(Calendar.DAY_OF_WEEK);
 
-        if(hour == hour1 && min == min1 && sec == alarm){
+        if(hour == hour1 && min == min1 && sec == alarm) {
             socketdo();
         }
     }
@@ -159,64 +155,8 @@ public class MyService extends Service {
             @Override
             public void run() {
                 try {
-                    final Calendar cal;
-                    cal = Calendar.getInstance();
-                    String send = "";
-                    hour = cal.get(Calendar.HOUR_OF_DAY);
-                    min = cal.get(Calendar.MINUTE);
-                    nWeek = cal.get(Calendar.DAY_OF_WEEK);
-                    send = nWeek + "," + hour + "," + min + "\n";
-                    Log.i("send", send);
-                    out.print(send);
-                    out.flush();
-
-                    while(true) {
-                        try {
-                            data = in.readLine();
-                            count++;
-
-                            data = data.replace("[", "");
-                            data = data.replace("'", "");
-                            data = data.replace(" ", "");
-                            data = data.replace("]", "");
-
-                            data_split = data.split(",");
-                            bus1 = data_split[1];
-                            if(data_split[0].contains("-")) {
-                                String[] temp = data_split[0].split("-");
-                                station1 = temp[0] + temp[1];
-                            } else {
-                                station1 = data_split[0];
-                            }
-
-                            if(data_split[2].contains("-")) {
-                                String[] temp = data_split[2].split("-");
-                                destStn = temp[0] + temp[1];
-                            } else {
-                                destStn = data_split[2];
-                            }
-
-                            busText = bus.showBusList(bus1, station1, destStn);
-
-                            //이 코드 없으면 Can't create handler inside thread that has not called Looper.prepare() 에러 발생
-                            //http://blog.naver.com/PostView.nhn?blogId=kbh3983&logNo=220859884046&categoryNo=77&parentCategoryNo=0&viewDate=&currentPage=1&postListTopCurrentPage=1&from=postView
-                            Handler mHandler = new Handler(Looper.getMainLooper());
-                            mHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Time time = new Time(curLat, curLng);
-                                    timeText = time.determineTime();
-                                    Log.i("timeText", timeText);
-
-                                    stepMsg = getStepMessage();
-                                    Log.i("stepMsg", stepMsg);
-                                    NotificationSomethings(busText);
-                                }
-                            }, 0);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    sendToServer();
+                    getFromServer();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -225,8 +165,73 @@ public class MyService extends Service {
         thread.start();
     }
 
+    //서버로 현재 시간과 날짜를 보내는 함수
+    private void sendToServer() {
+        final Calendar cal;
+        cal = Calendar.getInstance();
+        String send = "";
+        hour = cal.get(Calendar.HOUR_OF_DAY);
+        min = cal.get(Calendar.MINUTE);
+        nWeek = cal.get(Calendar.DAY_OF_WEEK);
+        send = nWeek + "," + hour + "," + min + "\n";
+        out.print(send);
+        out.flush();
+    }
+
+    //서버에서 보내오는 데이터를 받는 함수
+    private void getFromServer() {
+        while(true) {
+            try {
+                data = in.readLine();
+                splitData();
+
+                //이 코드 없으면 Can't create handler inside thread that has not called Looper.prepare() 에러 발생
+                Handler mHandler = new Handler(Looper.getMainLooper());
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        busText = bus.showBusList(bus1, station1, destStn); //버스 도착정보 메시지
+
+                        Time time = new Time(curLat, curLng);
+                        timeText = time.determineTime(); //몇번째 전 버스를 사용해야 하는지(날씨, 교통상황)
+
+                        stepMsg = getStepMessage(); //걸음 수 메시지
+
+                        NotificationSomethings(busText);
+                    }
+                }, 0);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //서버에서 받아온 데이터를 나누는 함수
+    private void splitData() {
+        data = data.replace("[", "");
+        data = data.replace("'", "");
+        data = data.replace(" ", "");
+        data = data.replace("]", "");
+
+        data_split = data.split(",");
+        bus1 = data_split[1];
+        if(data_split[0].contains("-")) {
+            String[] temp = data_split[0].split("-");
+            station1 = temp[0] + temp[1];
+        } else {
+            station1 = data_split[0];
+        }
+
+        if(data_split[2].contains("-")) {
+            String[] temp = data_split[2].split("-");
+            destStn = temp[0] + temp[1];
+        } else {
+            destStn = data_split[2];
+        }
+    }
+
     //걸음 수 메시지 생성 함수
-    public String getStepMessage() {
+    private String getStepMessage() {
         double lat1 = Double.parseDouble(bus.lat1);
         double lat2 = Double.parseDouble(bus.lat2);
         double lng1 = Double.parseDouble(bus.lng1);
@@ -300,13 +305,5 @@ public class MyService extends Service {
         double distance = R * c * 1000; //미터로 변환
         distance = Math.pow(distance, 2);
         return Math.sqrt(distance);
-    }
-
-    private void Speech(String text) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
-            // API 20
-        else
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
     }
 }

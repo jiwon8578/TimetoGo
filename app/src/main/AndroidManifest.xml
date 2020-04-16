@@ -20,16 +20,9 @@
         <activity android:name=".SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name=".ResultActivity"
-            android:parentActivityName=".MainActivity" >
-        </activity>
         <service android:name=".MyService"/>
     </application>
-
 </manifest>

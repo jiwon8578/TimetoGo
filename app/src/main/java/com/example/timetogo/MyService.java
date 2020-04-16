@@ -147,10 +147,7 @@ public class MyService extends Service {
         nWeek = cal.get(Calendar.DAY_OF_WEEK);
 
         if(hour == hour1 && min == min1 && sec == alarm){
-            //while (num < alarm) {
-                socketdo();
-              //  num++;
-            //}
+            socketdo();
         }
     }
 
@@ -235,11 +232,6 @@ public class MyService extends Service {
                                     }
                                     Log.i("stepMsg", stepMsg);
                                     NotificationSomethings(busText);
-                                    //items.add(stepMsg);
-
-                                    /*items.add(text);
-                                    items.add(timeText);
-                                    items.add(stepMsg);*/
                                 }
                             }, 0);
                         } catch (Exception e) {
@@ -264,21 +256,13 @@ public class MyService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), NOTIFICATION_CHANNEL_ID)
                 .setLargeIcon(BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.ic_launcher_foreground)) //BitMap 이미지 요구
                 .setContentTitle("Time to go!!!").setWhen(System.currentTimeMillis())
-
-                //.setContentText("상태바 드래그시 보이는 서브타이틀").setVibrate(new long[]{40,300})
                 .setContentText(contentText).setVibrate(new long[]{40,300})
-
-                //출처: https://androphil.tistory.com/368?category=423967 [소림사의 홍반장!]
-                // 더 많은 내용이라서 일부만 보여줘야 하는 경우 아래 주석을 제거하면 setContentText에 있는 문자열 대신 아래 문자열을 보여줌
-                //.setStyle(new NotificationCompat.BigTextStyle().bigText("더 많은 내용을 보여줘야 하는 경우..."))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setContentIntent(pendingIntent) // 사용자가 노티피케이션을 탭시 ResultActivity로 이동하도록 설정
+                .setContentIntent(pendingIntent) //사용자가 노티피케이션을 클릭 시 MainActivity로 이동하도록 설정
                 .setAutoCancel(true);
 
-        //OREO API 26 이상에서는 채널 필요
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-            builder.setSmallIcon(R.drawable.ic_launcher_foreground); //mipmap 사용시 Oreo 이상에서 시스템 UI 에러남
+            builder.setSmallIcon(R.drawable.ic_launcher_foreground);
             CharSequence channelName  = "노티페케이션 채널";
             String description = "오레오 이상을 위한 것임";
             int importance = NotificationManager.IMPORTANCE_HIGH;
@@ -286,33 +270,24 @@ public class MyService extends Service {
             NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName , importance);
             channel.setDescription(description);
 
-            // 노티피케이션 채널을 시스템에 등록
             assert notificationManager != null;
-            /*PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK  |
-                    PowerManager.ACQUIRE_CAUSES_WAKEUP |
-                    PowerManager.ON_AFTER_RELEASE, "My:Tag");
-            wakeLock.acquire(10000);*/
             notificationManager.createNotificationChannel(channel);
-
-        }else builder.setSmallIcon(R.mipmap.ic_launcher); // Oreo 이하에서 mipmap 사용하지 않으면 Couldn't create icon: StatusBarIcon 에러남
+        } else builder.setSmallIcon(R.mipmap.ic_launcher);
 
         assert notificationManager != null;
-        notificationManager.notify(1234, builder.build()); // 고유숫자로 노티피케이션 동작시킴
+        notificationManager.notify(1234, builder.build());
     }
 
     public static double distance(double lat1, double lat2, double lon1, double lon2) {
-        final int R = 6371; // Radius of the earth
+        final int R = 6371; //지구의 반지름
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = R * c * 1000; // convert to meters
-
+        double distance = R * c * 1000; //미터로 변환
         distance = Math.pow(distance, 2);
-
         return Math.sqrt(distance);
     }
 

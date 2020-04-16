@@ -42,9 +42,9 @@ import static com.example.timetogo.MainActivity.tts;
 public class MyService extends Service {
     public static final String START_SOCKET = "startsocket";
     public static final String STOP_SOCKET = "stopsocket";
-    public static Socket socket;
-    public static PrintWriter out;
-    public static BufferedReader in;
+    public Socket socket;
+    public PrintWriter out;
+    public BufferedReader in;
 
     Thread socketThread;
     Thread alarmThread;
@@ -60,7 +60,6 @@ public class MyService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
         if (action.equals(START_SOCKET)) {
-            //start your server thread from here
             this.socketThread = new Thread(new SocketThread());
             this.socketThread.start();
             this.alarmThread = new Thread(new AlarmThread());
@@ -81,6 +80,7 @@ public class MyService extends Service {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    //소켓 생성 쓰레드
     class SocketThread implements Runnable {
         public void run() {
             try {
@@ -95,6 +95,7 @@ public class MyService extends Service {
         }
     }
 
+    //알람(푸시 메시지) 생성 쓰레드
     class AlarmThread implements Runnable {
         public void run() {
             while (true) {
@@ -117,12 +118,12 @@ public class MyService extends Service {
                     }
                     if (nWeek == 5) {
                         strweek = "목요일";
-                        alarmTime(12, 39, 59);
-                        alarmTime(12, 40, 0);
-                        alarmTime(12, 41, 0);
-                        alarmTime(12, 42, 0);
-                        alarmTime(12, 43, 0);
-                        alarmTime(12, 44, 0);
+                        alarmTime(13, 17, 59);
+                        alarmTime(13, 18, 0);
+                        alarmTime(13, 19, 0);
+                        alarmTime(13, 20, 0);
+                        alarmTime(13, 21, 0);
+                        alarmTime(13, 22, 0);
                     }
                     if (nWeek == 6) {
                         strweek = "금요일";
@@ -138,7 +139,8 @@ public class MyService extends Service {
         }
     }
 
-    public void alarmTime(int hour1,int min1,int alarm) {
+    //해당 알람 시간에 socketdo 함수를 실행
+    private void alarmTime(int hour1,int min1,int alarm) {
         final Calendar cal;
         cal = Calendar.getInstance();
         hour = cal.get(Calendar.HOUR_OF_DAY);
@@ -151,7 +153,8 @@ public class MyService extends Service {
         }
     }
 
-    public void socketdo(){
+    //서버에 현재 시간과 날짜를 보내고, 서버에서 보내오는 데이터를 받고 푸시메시지에 띄우는 함수
+    private void socketdo(){
         Thread thread = new Thread() {
             @Override
             public void run() {
@@ -195,6 +198,8 @@ public class MyService extends Service {
 
                             busText = bus.showBusList(bus1, station1, destStn);
 
+                            //이 코드 없으면 Can't create handler inside thread that has not called Looper.prepare() 에러 발생
+                            //http://blog.naver.com/PostView.nhn?blogId=kbh3983&logNo=220859884046&categoryNo=77&parentCategoryNo=0&viewDate=&currentPage=1&postListTopCurrentPage=1&from=postView
                             Handler mHandler = new Handler(Looper.getMainLooper());
                             mHandler.postDelayed(new Runnable() {
                                 @Override
@@ -203,33 +208,7 @@ public class MyService extends Service {
                                     timeText = time.determineTime();
                                     Log.i("timeText", timeText);
 
-                                    double lat1 = Double.parseDouble(bus.lat1);
-                                    double lat2 = Double.parseDouble(bus.lat2);
-                                    double lng1 = Double.parseDouble(bus.lng1);
-                                    double lng2 = Double.parseDouble(bus.lng2);
-
-                                    double distance = distance(lat1, lat2, lng1, lng2);
-                                    Log.i("distance", distance+"");
-
-                                    stepMsg = "";
-                                    if(distance <= 3000) {
-                                        if(total > average) {
-                                            stepMsg = "이동 거리가 3km 이하입니다.\n" +
-                                                    "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
-                                                    "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                                    "평소보다 많이 걸으셨으니 대중교통을 이용하셔도 좋습니다.";
-                                        } else {
-                                            stepMsg = "이동 거리가 3km 이하입니다.\n" +
-                                                    "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
-                                                    "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                                    "평소보다 걸음수가 적습니다. 목적지까지 도보로 이동하시는 것은 어떠신가요?";
-                                        }
-                                    } else {
-                                        stepMsg = "이동 거리가 3km 이상입니다.\n" +
-                                                "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
-                                                "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
-                                                "목적지까지 대중교통을 이용해주세요.";
-                                    }
+                                    stepMsg = getStepMessage();
                                     Log.i("stepMsg", stepMsg);
                                     NotificationSomethings(busText);
                                 }
@@ -246,7 +225,38 @@ public class MyService extends Service {
         thread.start();
     }
 
-    public void NotificationSomethings(String contentText) {
+    //걸음 수 메시지 생성 함수
+    public String getStepMessage() {
+        double lat1 = Double.parseDouble(bus.lat1);
+        double lat2 = Double.parseDouble(bus.lat2);
+        double lng1 = Double.parseDouble(bus.lng1);
+        double lng2 = Double.parseDouble(bus.lng2);
+        double distance = distance(lat1, lat2, lng1, lng2);
+        String stepMsg = "";
+
+        if(distance <= 3000) {
+            if(total > average) {
+                stepMsg = "이동 거리가 3km 이하입니다.\n" +
+                        "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
+                        "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
+                        "평소보다 많이 걸으셨으니 대중교통을 이용하셔도 좋습니다.";
+            } else {
+                stepMsg = "이동 거리가 3km 이하입니다.\n" +
+                        "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
+                        "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
+                        "평소보다 걸음수가 적습니다. 목적지까지 도보로 이동하시는 것은 어떠신가요?";
+            }
+        } else {
+            stepMsg = "이동 거리가 3km 이상입니다.\n" +
+                    "현재 걸음 수는 " + String.valueOf(total) +"입니다.\n" +
+                    "평균 걸음수는 " + String.valueOf(average) + "입니다.\n" +
+                    "목적지까지 대중교통을 이용해주세요.";
+        }
+        return stepMsg;
+    }
+
+    //푸시메시지 생성 함수
+    private void NotificationSomethings(String contentText) {
         NotificationManager notificationManager = (NotificationManager)getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
         notificationIntent.putExtra("notificationId", busText+"@"+timeText+"@"+stepMsg); //전달할 값
@@ -278,7 +288,8 @@ public class MyService extends Service {
         notificationManager.notify(1234, builder.build());
     }
 
-    public static double distance(double lat1, double lat2, double lon1, double lon2) {
+    //거리 계산 함수(정류장 간 이동거리가 3키로 이상인지, 이하인지) -> 위도와 경도로 계산
+    private double distance(double lat1, double lat2, double lon1, double lon2) {
         final int R = 6371; //지구의 반지름
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);

@@ -120,24 +120,38 @@ public class MyService extends Service {
                     }
                     if (nWeek == 2) {
                         strweek = "월요일";
+                        alarmTime(9, 20, 0); //판교역 -> 을지로2가
+                        alarmTime(9, 50, 0); //을지로 2가 -> 숙대입구역
+                        alarmTime(15, 20, 0); //숙대입구역 -> 서울역
+                        alarmTime(15, 40, 0); //서울역 -> 판교역
                     }
                     if (nWeek == 3) {
                         strweek = "화요일";
+                        alarmTime(9, 20, 0); //판교역 -> 을지로2가
+                        alarmTime(9, 50, 0); //을지로 2가 -> 숙대입구역
+                        alarmTime(12, 10, 0); //숙대입구역 -> 서울역
+                        alarmTime(12, 30, 0); //서울역 -> 판교역
                     }
                     if (nWeek == 4) {
                         strweek = "수요일";
+                        alarmTime(9, 20, 0); //판교역 -> 을지로2가
+                        alarmTime(9, 50, 0); //을지로 2가 -> 숙대입구역
+                        alarmTime(15, 20, 0); //숙대입구역 -> 서울역
+                        alarmTime(15, 40, 0); //서울역 -> 판교역
                     }
                     if (nWeek == 5) {
                         strweek = "목요일";
-                        alarmTime(18, 51, 0);
-                        alarmTime(18, 52, 0);
-                        alarmTime(18, 53, 0);
-                        alarmTime(18, 54, 0);
-                        alarmTime(18, 55, 0);
-                        alarmTime(18, 56, 0);
+                        alarmTime(9, 20, 0); //판교역 -> 을지로2가
+                        alarmTime(9, 50, 0); //을지로 2가 -> 숙대입구역
+                        alarmTime(12, 10, 0); //숙대입구역 -> 서울역
+                        alarmTime(12, 30, 0); //서울역 -> 판교역
                     }
                     if (nWeek == 6) {
                         strweek = "금요일";
+                        alarmTime(10, 50, 0); //판교역 -> 을지로2가
+                        alarmTime(11, 30, 0); //을지로 2가 -> 숙대입구역
+                        alarmTime(18, 5, 0); //숙대입구역 -> 서울역
+                        alarmTime(18, 15, 0); //서울역 -> 판교역
                     }
                     if (nWeek == 7) {
                         strweek = "토요일";

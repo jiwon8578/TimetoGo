@@ -73,7 +73,9 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         tts.setPitch(0.7f);
                         tts.setSpeechRate(1.2f);
-                        speech(busText+timeText+stepText);
+                        if(busText != null && timeText != null && stepText != null) {
+                            speech(busText+timeText+stepText);
+                        }
                     }
                 }
             }

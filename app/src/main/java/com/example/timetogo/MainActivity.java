@@ -52,19 +52,74 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         StrictMode.enableDefaults();
 
-        //위치 퍼미션
-        if (!checkLocationServicesStatus()) {
-            showDialogForLocationServiceSetting();
+        locationPermission();
+        startBackgroundService();
+        listViewInit();
+        fitAPIInit();
+        ttsInit();
+        getNotifData();
+    }
+
+    //tts 초기 설정
+    private void ttsInit() {
+        tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int result = tts.setLanguage(Locale.KOREA);
+                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Toast.makeText(MainActivity.this, "이 언어는 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        tts.setPitch(0.7f);
+                        tts.setSpeechRate(1.2f);
+                    }
+                }
+            }
+        });
+    }
+
+    //구글 Fit API 설정
+    private void fitAPIInit() {
+        fitnessOptions = FitnessOptions.builder()
+                .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .build();
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this), fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                    this,
+                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+                    GoogleSignIn.getLastSignedInAccount(this),
+                    fitnessOptions);
         } else {
-            checkRunTimePermission();
+            subscribe();
         }
+    }
 
-        //백그라운드 서비스
-        Intent startSocket = new Intent(this, MyService.class);
-        startSocket.setAction(MyService.START_SOCKET);
-        startService(startSocket);
+    //노티피케이션에서 받아온 데이터를 리스트뷰에 보여주기
+    private void getNotifData() {
+        String textId = null;
+        Bundle extras = getIntent().getExtras();
+        if (extras == null) {
+            textId = "";
+        }
+        else {
+            textId = extras.getString("notificationId");
+            String[] data_split;
+            data_split = textId.split("@");
+            String busText = data_split[0];
+            String timeText = data_split[1];
+            String stepText = data_split[2];
+            items.add(busText);
+            items.add(timeText);
+            items.add(stepText);
 
-        //리스트뷰 설정
+            speech(busText+timeText+stepText);
+            speech("Hi");
+        }
+    }
+
+    //리스트뷰 초기화 설정
+    private void listViewInit() {
         items = new ArrayList<String>();
         adapter = new ArrayAdapter<String>(MainActivity.this, R.layout.my_list_item, items) {
             @NonNull
@@ -100,54 +155,28 @@ public class MainActivity extends AppCompatActivity {
         };
         listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
-
-        //노티피케이션에서 받아온 데이터
-        String textId = null;
-        Bundle extras = getIntent().getExtras();
-        if (extras == null) {
-            textId = "";
-        }
-        else {
-            textId = extras.getString("notificationId");
-            Toast.makeText(getApplicationContext(),textId,Toast.LENGTH_SHORT).show();
-        }
-
-        //구글 Fit API 설정
-        fitnessOptions = FitnessOptions.builder()
-                .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-                .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-                .build();
-        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this), fitnessOptions)) {
-            GoogleSignIn.requestPermissions(
-                    this,
-                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
-                    GoogleSignIn.getLastSignedInAccount(this),
-                    fitnessOptions);
-        } else {
-            subscribe();
-        }
-
-        //tts 초기 설정
-        tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status == TextToSpeech.SUCCESS) {
-                    int result = tts.setLanguage(Locale.KOREA);
-                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Toast.makeText(MainActivity.this, "이 언어는 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        tts.setPitch(0.7f);
-                        tts.setSpeechRate(1.2f);
-                    }
-                }
-            }
-        });
     }
 
-    private void Speech(String text) {
+    //백그라운드 서비스
+    private void startBackgroundService() {
+        Intent startSocket = new Intent(this, MyService.class);
+        startSocket.setAction(MyService.START_SOCKET);
+        startService(startSocket);
+    }
+
+    //위치 퍼미션
+    private void locationPermission() {
+        if (!checkLocationServicesStatus()) {
+            showDialogForLocationServiceSetting();
+        } else {
+            checkRunTimePermission();
+        }
+    }
+
+    //텍스트를 음성으로 읽어주는 함수
+    private void speech(String text) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
-            // API 20
         else
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
     }
